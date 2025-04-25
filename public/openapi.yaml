@@ -1,0 +1,747 @@
+openapi: 3.0.0
+info:
+  title: VanBoDoi
+  description: 'Anh yeu co ay nhieu lam <3'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://127.0.0.1:8000'
+    description: 'Local API server'
+paths:
+  /api/signup:
+    post:
+      tags:
+        - auth
+      summary: 'Signup a user'
+      description: 'Signup a user.'
+      operationId: AuthController.signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoggedInUserResource'
+        '422':
+          description: 'Unprocessable entity'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /api/login:
+    post:
+      tags:
+        - auth
+      summary: 'Login a user'
+      description: 'Login a user.'
+      operationId: AuthController.login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoggedInUserResource'
+        '422':
+          description: 'Unprocessable entity'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                properties:
+                  message: { type: string, example: 'Invalid credentials.' }
+                type: object
+  /api/logout:
+    post:
+      tags:
+        - auth
+      summary: 'Logout a user'
+      description: 'Logout a user.'
+      operationId: AuthController.logout
+      responses:
+        '204':
+          description: 'No content'
+      security:
+        -
+          BearerToken: []
+  /api/hotels:
+    get:
+      tags:
+        - hotels
+      summary: 'List all hotels'
+      operationId: HotelController.get
+      responses:
+        '200':
+          description: 'List of hotels'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hotel'
+    post:
+      tags:
+        - hotels
+      summary: 'Create a new hotel'
+      operationId: HotelController.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHotelRequest'
+      responses:
+        '201':
+          description: 'Hotel created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hotel'
+  '/api/hotels/{id}':
+    get:
+      tags:
+        - hotels
+      summary: 'Get a specific hotel'
+      operationId: HotelController.getById
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Hotel detail'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hotel'
+        '404':
+          description: 'Not found'
+    put:
+      tags:
+        - hotels
+      summary: 'Update hotel info'
+      operationId: HotelController.update
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHotelRequest'
+      responses:
+        '200':
+          description: 'Hotel updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hotel'
+        '404':
+          description: 'Not found'
+    delete:
+      tags:
+        - hotels
+      summary: 'Delete a hotel'
+      operationId: HotelController.delete
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: 'No Content'
+        '404':
+          description: 'Not found'
+  /api/floors:
+    get:
+      tags:
+        - floors
+      summary: 'Get all floors for a hotel'
+      operationId: 1c2bcb89b618a7c6b906ddf1d1035b44
+      parameters:
+        -
+          name: hotelId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'List of floors'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Floor'
+    post:
+      tags:
+        - floors
+      summary: 'Create a new floor for a hotel'
+      operationId: 6d5eb48fcf11428aad0f3e572a7580aa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFloorRequest'
+      responses:
+        '201':
+          description: 'Floor created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Floor'
+  '/api/floors/{id}':
+    get:
+      tags:
+        - floors
+      summary: 'Get floor by ID'
+      operationId: 1c111640a4bc636501a9424d2acc4955
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Floor found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Floor'
+    put:
+      tags:
+        - floors
+      summary: 'Update floor'
+      operationId: fd506d6157b4e618ad91aa4804f93a86
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFloorRequest'
+      responses:
+        '200':
+          description: 'Floor updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Floor'
+    delete:
+      tags:
+        - floors
+      summary: 'Delete floor'
+      operationId: 05a4bb1ddf5a08c8a404af8ea71f132d
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: 'Floor deleted'
+  /api/profile:
+    get:
+      tags:
+        - profile
+      summary: me
+      description: 'Get the authenticated user.'
+      operationId: ProfileController.me
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResource'
+      security:
+        -
+          BearerToken: []
+  /api/rooms:
+    get:
+      tags:
+        - rooms
+      summary: 'Get all rooms'
+      operationId: bea681612754126f01807ff95647eb34
+      responses:
+        '200':
+          description: 'Rooms retrieved'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+    post:
+      tags:
+        - rooms
+      summary: 'Create a new room with image upload'
+      operationId: cd6c1029f22e2425a1f99cf83e27383a
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                hotelId:
+                  description: 'ID of the hotel'
+                  type: integer
+                  example: 1
+                floorId:
+                  description: 'ID of the floor in the hotel'
+                  type: integer
+                  example: 2
+                roomName:
+                  description: 'Room Name'
+                  type: string
+                  example: 'Deluxe Room'
+                roomImages:
+                  description: 'Images for the room'
+                  type: array
+                  items: { type: string, format: binary }
+                roomVideo:
+                  description: 'Video for the room'
+                  type: string
+                  format: binary
+                status:
+                  description: 'Room status (e.g., available, booked)'
+                  type: string
+                  example: available
+                roomType:
+                  description: 'Type of the room (e.g., deluxe, standard)'
+                  type: string
+                  example: luxury
+                capacity:
+                  description: 'Number of people the room can accommodate'
+                  type: integer
+                  example: 2
+                price:
+                  description: 'Room price'
+                  type: number
+                  format: float
+                  example: 150
+                description:
+                  description: 'Room description'
+                  type: string
+                  example: 'A beautiful deluxe room with ocean view.'
+              type: object
+      responses:
+        '201':
+          description: 'Room created with images'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: 'Invalid hotelId or floorId'
+          content:
+            application/json:
+              schema:
+                properties:
+                  message: { type: string, example: 'Invalid hotelId or floorId.' }
+                  errors: { type: object, example: 'hotelId:The hotel does not exist.' }
+                type: object
+  '/api/rooms/{roomId}':
+    get:
+      tags:
+        - rooms
+      summary: 'Get a room by ID'
+      operationId: c4fe2b4e172e2c3c28f68b2d805379f1
+      parameters:
+        -
+          name: roomId
+          in: path
+          description: 'Room ID'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Room retrieved'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '404':
+          description: 'Room not found'
+    put:
+      tags:
+        - rooms
+      summary: 'Update an existing room'
+      operationId: e251ce2d47368a4158caaf363e17b80f
+      parameters:
+        -
+          name: roomId
+          in: path
+          description: 'Room ID'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoomRequest'
+      responses:
+        '200':
+          description: 'Room updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '404':
+          description: 'Room not found'
+    delete:
+      tags:
+        - rooms
+      summary: 'Delete a room by ID'
+      operationId: 9d53e6dc614ef4465910416e33373133
+      parameters:
+        -
+          name: roomId
+          in: path
+          description: 'Room ID'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: 'Room deleted'
+        '404':
+          description: 'Room not found'
+components:
+  schemas:
+    ValidationError:
+      properties:
+        message:
+          type: string
+          example: 'The given data was invalid.'
+        errors:
+          properties:
+            'key 1':
+              type: array
+              items:
+                type: string
+                example: 'Error message 1'
+            'key 2':
+              type: array
+              items:
+                type: string
+                example: 'Error message 2'
+          type: object
+      type: object
+    LoginRequest:
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          example: '123456'
+      type: object
+    SignupRequest:
+      required:
+        - userName
+        - email
+        - password
+      properties:
+        userName:
+          type: string
+          example: 'John Doe'
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          example: '123456'
+      type: object
+    CreateFloorRequest:
+      required:
+        - hotelId
+        - floorName
+      properties:
+        hotelId:
+          type: integer
+          example: 1
+        floorName:
+          type: string
+          example: 'Tầng 1'
+      type: object
+    UpdateFloorRequest:
+      properties:
+        floorName:
+          type: string
+          example: 'Lầu 5'
+      type: object
+    CreateHotelRequest:
+      required:
+        - hotelName
+        - address
+      properties:
+        hotelName:
+          type: string
+          example: 'Luxury Hotel'
+        address:
+          type: string
+          example: '123 Main St'
+        phoneNumber:
+          type: string
+          example: '+123456789'
+        nearbyPlaces:
+          type: string
+          example: 'Beach, Mall'
+      type: object
+    UpdateHotelRequest:
+      required:
+        - hotelName
+        - address
+        - phoneNumber
+      properties:
+        hotelName:
+          type: string
+          example: 'Luxury Hotel'
+        address:
+          type: string
+          example: '123 Main St'
+        phoneNumber:
+          type: string
+          example: 123-456-7890
+        nearbyPlaces:
+          type: string
+          example: 'Shopping mall, Park'
+      type: object
+    CreateRoomRequest:
+      required:
+        - hotelId
+        - floorId
+        - roomName
+      properties:
+        hotelId:
+          type: integer
+        floorId:
+          type: integer
+        roomName:
+          type: string
+        status:
+          type: string
+        roomType:
+          type: string
+        capacity:
+          type: integer
+        price:
+          type: number
+        description:
+          type: string
+        roomImages:
+          type: array
+          items:
+            type: string
+            format: binary
+        roomVideo:
+          type: string
+          format: binary
+      type: object
+    UpdateRoomRequest:
+      required:
+        - hotelId
+        - floorId
+        - roomName
+      properties:
+        hotelId:
+          type: integer
+        floorId:
+          type: integer
+        roomName:
+          type: string
+        status:
+          type: string
+        roomType:
+          type: string
+        capacity:
+          type: integer
+        price:
+          type: number
+        description:
+          type: string
+        roomImages:
+          type: array
+          items:
+            type: string
+            format: binary
+        roomVideo:
+          type: string
+          format: binary
+      type: object
+    AccessTokenResource:
+      properties:
+        access_token:
+          type: string
+          example: 6|JeXDJdhmaQN4Nl3T3DaD9sE20PoPrdUx15W0m2eA
+        type:
+          type: string
+          example: bearer
+      type: object
+    Floor:
+      required:
+        - hotelId
+        - floorName
+      properties:
+        hotelId:
+          type: integer
+          example: 2
+        floorName:
+          type: string
+          example: 'Tầng 2'
+      type: object
+    Hotel:
+      properties:
+        id:
+          type: integer
+          example: 1
+        hotelName:
+          type: string
+          example: 'Luxury Hotel'
+        address:
+          type: string
+          example: '123 Main St'
+        phoneNumber:
+          type: string
+          example: '+123456789'
+        nearbyPlaces:
+          type: string
+          example: 'Beach, Mall'
+      type: object
+    LoggedInUserResource:
+      properties:
+        user:
+          $ref: '#/components/schemas/UserResource'
+        token:
+          $ref: '#/components/schemas/AccessTokenResource'
+      type: object
+    Room:
+      properties:
+        roomId:
+          type: integer
+          example: 1
+        roomName:
+          type: string
+          example: 'Deluxe Room'
+        status:
+          type: string
+          example: Available
+        roomType:
+          type: string
+          example: Single
+        capacity:
+          type: integer
+          example: 2
+        price:
+          type: number
+          format: float
+          example: 100.5
+        description:
+          type: string
+          example: 'A luxurious room with sea view'
+        roomImages:
+          type: array
+          items:
+            type: string
+          example:
+            - images/abc.jpg
+            - images/xyz.jpg
+        roomVideo:
+          type: string
+          example: videos/video.mp4
+        hotelId:
+          type: integer
+          example: 1
+        floorId:
+          type: integer
+          example: 2
+        userId:
+          type: integer
+          example: 3
+      type: object
+    UserResource:
+      properties:
+        userId:
+          type: bigint
+          example: 1
+        userName:
+          type: string
+          example: 'John Doe'
+        email:
+          type: string
+          example: john@example.com
+        created_at:
+          type: string
+          format: date-time
+          example: '2022-08-27T16:14:46.000000Z'
+      type: object
+  securitySchemes:
+    BearerToken:
+      type: http
+      bearerFormat: JWT
+      scheme: bearer
+tags:
+  -
+    name: auth
+    description: 'User authentication'
+  -
+    name: profile
+    description: 'User profile'
+  -
+    name: hotels
+    description: hotels
+  -
+    name: floors
+    description: floors
+  -
+    name: rooms
+    description: rooms

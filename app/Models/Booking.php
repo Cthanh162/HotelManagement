@@ -27,6 +27,10 @@ class Booking extends Model
         'createdBy',
         'totalPrice',
     ];
+    protected $casts = [
+        'checkinTime' => 'datetime',
+        'checkoutTime' => 'datetime',
+    ];
 
     public function room()
     {

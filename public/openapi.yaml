@@ -81,6 +81,162 @@ paths:
       security:
         -
           BearerToken: []
+  /api/bookings:
+    get:
+      tags:
+        - Booking
+      summary: 'Get all bookings'
+      operationId: d3bb2e35cbd523590954a3025a2bd03c
+      responses:
+        '200':
+          description: 'Booking list retrieved'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+    post:
+      tags:
+        - Booking
+      summary: 'Create a new booking'
+      operationId: e33fa5a6507581f9b1e0d710a9a130d1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: 'Booking created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: 'Bad Request'
+  '/api/bookings/{id}/confirm':
+    patch:
+      tags:
+        - Booking
+      summary: 'Confirm a booking'
+      operationId: 58b8dbbe8abf604097b9e589a5e62920
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Booking confirmed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: 'Booking not found'
+  '/api/bookings/{id}/cancel':
+    patch:
+      tags:
+        - Booking
+      summary: 'Cancel a booking'
+      operationId: 1b1bbf646a043e29766e28d7876487df
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Booking canceled'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: 'Booking not found'
+  '/api/bookings/{id}':
+    get:
+      tags:
+        - Booking
+      summary: 'Get booking by ID'
+      operationId: ae02ab266003041854cb667bef81d5ad
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Booking retrieved'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: 'Booking not found'
+    put:
+      tags:
+        - Booking
+      summary: 'Update a booking'
+      operationId: fb300db4391c22f2232e2814d49641c7
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '200':
+          description: 'Booking updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: 'Booking not found'
+  /api/bookings/search:
+    get:
+      tags:
+        - Booking
+      summary: 'Search bookings by hotel or floor'
+      operationId: b80406e5c5e44467e6e01ee28135cf53
+      parameters:
+        -
+          name: hotelId
+          in: query
+          required: false
+          schema:
+            type: integer
+        -
+          name: floor
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Bookings found'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
   /api/hotels:
     get:
       tags:
@@ -501,6 +657,63 @@ components:
           type: string
           example: '123456'
       type: object
+    CreateBookingRequest:
+      required:
+        - roomId
+        - userId
+        - checkinTime
+        - checkoutTime
+        - totalPrice
+      properties:
+        roomId:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        checkinTime:
+          type: string
+          format: date-time
+          example: '2025-05-01T14:00:00'
+        checkoutTime:
+          type: string
+          format: date-time
+          example: '2025-05-03T12:00:00'
+        totalPrice:
+          type: number
+          format: float
+          example: 250.5
+      type: object
+    UpdateBookingRequest:
+      properties:
+        roomId:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 5
+        checkinTime:
+          type: string
+          format: date-time
+          example: '2025-06-01T12:00:00Z'
+        checkoutTime:
+          type: string
+          format: date-time
+          example: '2025-06-05T12:00:00Z'
+        status:
+          type: string
+          example: cancelled
+        paymentStatus:
+          type: string
+          example: paid
+        createdBy:
+          type: integer
+          example: 1
+        totalPrice:
+          type: number
+          format: float
+          example: 600
+      type: object
     CreateFloorRequest:
       required:
         - hotelId
@@ -627,6 +840,36 @@ components:
           type: string
           example: bearer
       type: object
+    Booking:
+      properties:
+        id:
+          type: integer
+          example: 1
+        roomId:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        checkinTime:
+          type: string
+          format: date-time
+          example: '2025-05-01T14:00:00'
+        checkoutTime:
+          type: string
+          format: date-time
+          example: '2025-05-03T12:00:00'
+        status:
+          type: string
+          example: PENDING
+        paymentStatus:
+          type: string
+          example: UNPAID
+        totalPrice:
+          type: number
+          format: float
+          example: 250.5
+      type: object
     Floor:
       required:
         - hotelId
@@ -736,6 +979,9 @@ tags:
   -
     name: profile
     description: 'User profile'
+  -
+    name: Booking
+    description: Booking
   -
     name: hotels
     description: hotels

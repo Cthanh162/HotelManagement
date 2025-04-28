@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802
+class ComposerStaticInit401bb32cf2522e20e196faebc99b8bcf
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -542,10 +542,13 @@ class ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802
         'App\\Events\\UserSignedUp' => __DIR__ . '/../..' . '/app/Events/UserSignedUp.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Http\\Controllers\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuthController.php',
+        'App\\Http\\Controllers\\BookingController' => __DIR__ . '/../..' . '/app/Http/Controllers/BookingController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\HotelController' => __DIR__ . '/../..' . '/app/Http/Controllers/HotelController.php',
+        'App\\Http\\Controllers\\HotelFloorController' => __DIR__ . '/../..' . '/app/Http/Controllers/HotelFloorController.php',
         'App\\Http\\Controllers\\PandoraController' => __DIR__ . '/../..' . '/app/Http/Controllers/PandoraController.php',
         'App\\Http\\Controllers\\ProfileController' => __DIR__ . '/../..' . '/app/Http/Controllers/ProfileController.php',
+        'App\\Http\\Controllers\\RoomController' => __DIR__ . '/../..' . '/app/Http/Controllers/RoomController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
         'App\\Http\\Middleware\\Authenticate' => __DIR__ . '/../..' . '/app/Http/Middleware/Authenticate.php',
         'App\\Http\\Middleware\\EncryptCookies' => __DIR__ . '/../..' . '/app/Http/Middleware/EncryptCookies.php',
@@ -559,11 +562,20 @@ class ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802
         'App\\Http\\Middleware\\VerifyCsrfToken' => __DIR__ . '/../..' . '/app/Http/Middleware/VerifyCsrfToken.php',
         'App\\Http\\Requests\\Auth\\LoginRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Auth/LoginRequest.php',
         'App\\Http\\Requests\\Auth\\SignupRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Auth/SignupRequest.php',
+        'App\\Http\\Requests\\Booking\\CreateBookingRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Booking/CreateBookingRequest.php',
+        'App\\Http\\Requests\\Booking\\UpdateBookingRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Booking/UpdateBookingRequest.php',
+        'App\\Http\\Requests\\Floor\\CreateFloorRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Floor/CreateFloorRequest.php',
+        'App\\Http\\Requests\\Floor\\UpdateFloorRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Floor/UpdateFloorRequest.php',
         'App\\Http\\Requests\\Hotel\\CreateHotelRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Hotel/CreateHotelRequest.php',
         'App\\Http\\Requests\\Hotel\\UpdateHotelRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Hotel/UpdateHotelRequest.php',
+        'App\\Http\\Requests\\Room\\CreateRoomRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Room/CreateRoomRequest.php',
+        'App\\Http\\Requests\\Room\\UpdateRoomRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Room/UpdateRoomRequest.php',
         'App\\Http\\Resources\\AccessTokenResource' => __DIR__ . '/../..' . '/app/Http/Resources/AccessTokenResource.php',
+        'App\\Http\\Resources\\BookingResource' => __DIR__ . '/../..' . '/app/Http/Resources/BookingResource.php',
+        'App\\Http\\Resources\\FloorResource' => __DIR__ . '/../..' . '/app/Http/Resources/FloorResource.php',
         'App\\Http\\Resources\\HotelResource' => __DIR__ . '/../..' . '/app/Http/Resources/HotelResource.php',
         'App\\Http\\Resources\\LoggedInUserResource' => __DIR__ . '/../..' . '/app/Http/Resources/LoggedInUserResource.php',
+        'App\\Http\\Resources\\RoomResource' => __DIR__ . '/../..' . '/app/Http/Resources/RoomResource.php',
         'App\\Http\\Resources\\UserResource' => __DIR__ . '/../..' . '/app/Http/Resources/UserResource.php',
         'App\\Models\\Booking' => __DIR__ . '/../..' . '/app/Models/Booking.php',
         'App\\Models\\Floor' => __DIR__ . '/../..' . '/app/Models/Floor.php',
@@ -3462,7 +3474,6 @@ class ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802
         'OpenApi\\Analysers\\DocBlockAnnotationFactory' => __DIR__ . '/..' . '/zircote/swagger-php/src/Analysers/DocBlockAnnotationFactory.php',
         'OpenApi\\Analysers\\DocBlockParser' => __DIR__ . '/..' . '/zircote/swagger-php/src/Analysers/DocBlockParser.php',
         'OpenApi\\Analysers\\ReflectionAnalyser' => __DIR__ . '/..' . '/zircote/swagger-php/src/Analysers/ReflectionAnalyser.php',
-        'OpenApi\\Analysers\\TokenAnalyser' => __DIR__ . '/..' . '/zircote/swagger-php/src/Analysers/TokenAnalyser.php',
         'OpenApi\\Analysers\\TokenScanner' => __DIR__ . '/..' . '/zircote/swagger-php/src/Analysers/TokenScanner.php',
         'OpenApi\\Analysis' => __DIR__ . '/..' . '/zircote/swagger-php/src/Analysis.php',
         'OpenApi\\Annotations\\AbstractAnnotation' => __DIR__ . '/..' . '/zircote/swagger-php/src/Annotations/AbstractAnnotation.php',
@@ -3553,10 +3564,13 @@ class ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802
         'OpenApi\\Attributes\\XmlContent' => __DIR__ . '/..' . '/zircote/swagger-php/src/Attributes/XmlContent.php',
         'OpenApi\\Context' => __DIR__ . '/..' . '/zircote/swagger-php/src/Context.php',
         'OpenApi\\Generator' => __DIR__ . '/..' . '/zircote/swagger-php/src/Generator.php',
+        'OpenApi\\GeneratorAwareInterface' => __DIR__ . '/..' . '/zircote/swagger-php/src/GeneratorAwareInterface.php',
+        'OpenApi\\GeneratorAwareTrait' => __DIR__ . '/..' . '/zircote/swagger-php/src/GeneratorAwareTrait.php',
         'OpenApi\\Loggers\\ConsoleLogger' => __DIR__ . '/..' . '/zircote/swagger-php/src/Loggers/ConsoleLogger.php',
         'OpenApi\\Loggers\\DefaultLogger' => __DIR__ . '/..' . '/zircote/swagger-php/src/Loggers/DefaultLogger.php',
         'OpenApi\\OpenApiException' => __DIR__ . '/..' . '/zircote/swagger-php/src/OpenApiException.php',
         'OpenApi\\Pipeline' => __DIR__ . '/..' . '/zircote/swagger-php/src/Pipeline.php',
+        'OpenApi\\Processors\\AugmentDiscriminators' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/AugmentDiscriminators.php',
         'OpenApi\\Processors\\AugmentParameters' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/AugmentParameters.php',
         'OpenApi\\Processors\\AugmentProperties' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/AugmentProperties.php',
         'OpenApi\\Processors\\AugmentRefs' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/AugmentRefs.php',
@@ -3582,7 +3596,6 @@ class ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802
         'OpenApi\\Processors\\MergeXmlContent' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/MergeXmlContent.php',
         'OpenApi\\Processors\\OperationId' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/OperationId.php',
         'OpenApi\\Processors\\PathFilter' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/PathFilter.php',
-        'OpenApi\\Processors\\ProcessorInterface' => __DIR__ . '/..' . '/zircote/swagger-php/src/Processors/ProcessorInterface.php',
         'OpenApi\\Serializer' => __DIR__ . '/..' . '/zircote/swagger-php/src/Serializer.php',
         'OpenApi\\Util' => __DIR__ . '/..' . '/zircote/swagger-php/src/Util.php',
         'Override' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/Override.php',
@@ -6084,10 +6097,10 @@ class ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit55ddbd647e53cc8e73b2eb5e6ec78802::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit401bb32cf2522e20e196faebc99b8bcf::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit401bb32cf2522e20e196faebc99b8bcf::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit401bb32cf2522e20e196faebc99b8bcf::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit401bb32cf2522e20e196faebc99b8bcf::$classMap;
 
         }, null, ClassLoader::class);
     }

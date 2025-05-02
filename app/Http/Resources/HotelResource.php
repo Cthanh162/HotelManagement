@@ -8,7 +8,7 @@ use OpenApi\Attributes as OAT;
 #[OAT\Schema(
     schema: 'Hotel',
     properties: [
-        new OAT\Property(property: 'id', type: 'integer', example: 1),
+        new OAT\Property(property: 'hotelId', type: 'integer', example: 1),
         new OAT\Property(property: 'hotelName', type: 'string', example: 'Luxury Hotel'),
         new OAT\Property(property: 'address', type: 'string', example: '123 Main St'),
         new OAT\Property(property: 'phoneNumber', type: 'string', example: '+123456789'),
@@ -20,7 +20,7 @@ class HotelResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => $this->id,
+            'hotelId' => $this->hotelId,
             'hotelName' => $this->hotelName,
             'address' => $this->address,
             'phoneNumber' => $this->phoneNumber,

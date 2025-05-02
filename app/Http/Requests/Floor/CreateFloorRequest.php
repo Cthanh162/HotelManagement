@@ -23,7 +23,7 @@ class CreateFloorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'hotelId' => 'required|exists:hotels,id',  // Kiểm tra khách sạn tồn tại
+            'hotelId' => 'required|exists:hotels,hotelId',  // Kiểm tra khách sạn tồn tại
             'floorName' => 'required|string|max:255',
         ];
     }

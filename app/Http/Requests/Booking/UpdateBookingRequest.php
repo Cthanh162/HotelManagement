@@ -28,8 +28,8 @@ class UpdateBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'roomId' => 'sometimes|integer|exists:rooms,id',
-            'userId' => 'sometimes|integer|exists:users,id',
+            'roomId' => 'sometimes|integer|exists:rooms,roomId',
+            'userId' => 'sometimes|integer|exists:users,userId',
             'checkinTime' => 'sometimes|date',
             'checkoutTime' => 'sometimes|date|after:checkinTime',
             'status' => 'sometimes|string',

@@ -453,6 +453,74 @@ paths:
       security:
         -
           BearerToken: []
+  /api/reviews:
+    get:
+      tags:
+        - reviews
+      summary: 'List all reviews'
+      operationId: ReviewController.index
+      responses:
+        '200':
+          description: 'List of reviews'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+    post:
+      tags:
+        - reviews
+      summary: 'Create a new review after checkout'
+      operationId: ReviewController.store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '201':
+          description: 'Review created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+  '/api/reviews/{id}':
+    get:
+      tags:
+        - reviews
+      summary: 'Get a specific review'
+      operationId: ReviewController.show
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Review details'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+    delete:
+      tags:
+        - reviews
+      summary: 'Delete a review'
+      operationId: ReviewController.destroy
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
   /api/rooms:
     get:
       tags:
@@ -606,6 +674,57 @@ paths:
           description: 'Room deleted'
         '404':
           description: 'Room not found'
+  /api/statistics/revenue/daily:
+    get:
+      tags:
+        - Statistics
+      summary: 'Thống kê doanh thu theo ngày'
+      operationId: d34e1fe8b83ae3b7ac30232709bfa9ea
+      parameters:
+        -
+          name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: '2025-05-01'
+      responses:
+        '200':
+          description: 'Thống kê doanh thu theo ngày'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RevenueStat'
+        '400':
+          description: 'Dữ liệu không hợp lệ'
+  /api/statistics/revenue/monthly:
+    get:
+      tags:
+        - Statistics
+      summary: 'Thống kê doanh thu theo tháng'
+      operationId: ba5511908735b849a9620f24849ce9f5
+      parameters:
+        -
+          name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 2025-05
+      responses:
+        '200':
+          description: 'Thống kê doanh thu theo tháng'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RevenueStat'
+        '400':
+          description: 'Dữ liệu không hợp lệ'
 components:
   schemas:
     ValidationError:
@@ -769,6 +888,23 @@ components:
           type: string
           example: 'Shopping mall, Park'
       type: object
+    CreateReviewRequest:
+      required:
+        - roomId
+        - rating
+        - des
+      properties:
+        roomId:
+          type: integer
+          example: 5
+        rating:
+          type: number
+          format: float
+          example: 4.5
+        des:
+          type: string
+          example: 'Nice and clean room.'
+      type: object
     CreateRoomRequest:
       required:
         - hotelId
@@ -884,7 +1020,7 @@ components:
       type: object
     Hotel:
       properties:
-        id:
+        hotelId:
           type: integer
           example: 1
         hotelName:
@@ -906,6 +1042,46 @@ components:
           $ref: '#/components/schemas/UserResource'
         token:
           $ref: '#/components/schemas/AccessTokenResource'
+      type: object
+    RevenueStat:
+      properties:
+        hotelId:
+          type: integer
+          example: 1
+        hotelName:
+          type: string
+          example: 'Luxury Hotel'
+        totalRevenue:
+          type: number
+          format: float
+          example: 2500.5
+        date:
+          type: string
+          format: date
+          example: '2025-05-01'
+      type: object
+    Review:
+      properties:
+        id:
+          type: integer
+          example: 1
+        roomId:
+          type: integer
+          example: 5
+        userId:
+          type: integer
+          example: 2
+        rating:
+          type: number
+          format: float
+          example: 4.5
+        des:
+          type: string
+          example: 'Nice and clean room.'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-05-01T10:00:00Z'
       type: object
     Room:
       properties:
@@ -989,5 +1165,11 @@ tags:
     name: floors
     description: floors
   -
+    name: reviews
+    description: reviews
+  -
     name: rooms
     description: rooms
+  -
+    name: Statistics
+    description: Statistics

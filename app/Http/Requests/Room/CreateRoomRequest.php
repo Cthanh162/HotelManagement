@@ -26,7 +26,7 @@ class CreateRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'hotelId' => 'required|exists:hotels,id',
+            'hotelId' => 'required|exists:hotels,hotelId',
             'floorId' => 'required|exists:floors,id',
             'roomName' => 'required|string|max:255',
 

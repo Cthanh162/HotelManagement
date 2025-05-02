@@ -10,7 +10,7 @@ class Hotel extends Model
     use HasFactory;
 
     protected $table = 'hotels'; 
-    protected $primaryKey = 'id'; 
+    protected $primaryKey = 'hotelId'; 
     public $timestamps = false;
     public $incrementing = true;
     protected $keyType = 'int';

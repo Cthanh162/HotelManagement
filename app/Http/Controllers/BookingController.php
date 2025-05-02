@@ -37,7 +37,7 @@ class BookingController extends Controller
         }
 
         // Kiểm tra trạng thái phòng
-        if ($room->status !== 'AVAILABLE') {
+        if ($room->status !== 'a') {
             return response()->json(['message' => 'Room is not available for booking.'], 400);
         }
 

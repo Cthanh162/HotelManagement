@@ -128,7 +128,7 @@ class RoomController extends Controller
             ], 400);
         }
 
-        if (!$floors || $floors->hotelId !== $hotel->id) {
+        if (!$floors || $floors->hotelId !== $hotel->hotelId) {
             return response()->json([
                 'message' => 'Invalid hotelId or floorId.',
                 'errors' => [

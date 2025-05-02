@@ -16,7 +16,6 @@ class Room extends Model
     public $timestamps = false;
     protected $casts = [
         'roomImages' => 'array',
-        // Thêm các casts khác nếu cần
     ];
     protected $fillable = [
         'userId',
@@ -30,7 +29,6 @@ class Room extends Model
         'description',
         'roomVideo',
         'roomImages',
-        'createdAt',
     ];
 
     public function user()

@@ -32,8 +32,8 @@ class UpdateBookingRequest extends FormRequest
             'userId' => 'sometimes|integer|exists:users,userId',
             'checkinTime' => 'sometimes|date',
             'checkoutTime' => 'sometimes|date|after:checkinTime',
-            'status' => 'sometimes|string',
-            'paymentStatus' => 'sometimes|string',
+            'status' => 'nullable|string',
+            'paymentStatus' => 'nullable|string|in:paid,pending_payment,PENDING',
             'createdBy' => 'sometimes|integer',
             'totalPrice' => 'sometimes|numeric',
         ];

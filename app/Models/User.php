@@ -34,7 +34,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
     ];
-
+    public $timestamps = false;
     protected $casts = [
         'createTime' => 'datetime',
         'lastUpdateTime' => 'datetime',

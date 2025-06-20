@@ -12,7 +12,7 @@ use OpenApi\Attributes as OAT;
 
 class ReviewController extends Controller
 {
-    #[OAT\Post(
+   #[OAT\Post(
         path: '/api/reviews',
         summary: 'Create a new review after checkout',
         tags: ['reviews'],
@@ -34,13 +34,14 @@ class ReviewController extends Controller
         $hasCheckedOut = \App\Models\Booking::where('userId', Auth::id())
             ->where('roomId', $request->roomId)
             ->where('checkoutTime', '<=', now())
+            ->where('paymentStatus', 'paid')
             ->exists();
 
-        if (!$hasCheckedOut) {
-            return response()->json([
-                'message' => 'You can only review a room after you have checked out from it.'
-            ], HttpResponse::HTTP_FORBIDDEN);
-        }
+        // if (!$hasCheckedOut) {
+        //     return response()->json([
+        //         'message' => 'You can only review a room after you have checked out and paid for it.'
+        //     ], HttpResponse::HTTP_FORBIDDEN);
+        // }
 
         $review = Review::create([
             'userId' => Auth::id(),
@@ -55,9 +56,17 @@ class ReviewController extends Controller
 
     #[OAT\Get(
         path: '/api/reviews',
-        summary: 'List all reviews',
+        summary: 'List all reviews or filter by roomId',
         tags: ['reviews'],
         operationId: 'ReviewController.index',
+        parameters: [
+            new OAT\Parameter(
+                name: 'roomId',
+                in: 'query',
+                required: false,
+                schema: new OAT\Schema(type: 'integer')
+            )
+        ],
         responses: [
             new OAT\Response(
                 response: HttpResponse::HTTP_OK,
@@ -66,31 +75,55 @@ class ReviewController extends Controller
             )
         ]
     )]
-    public function index()
+    public function index(Request $request)
     {
-        return ReviewResource::collection(Review::all());
+       $roomId = $request->query('roomId');
+    $query = Review::query();
+
+    if ($roomId) {
+        $query->where('roomId', $roomId);
+    }
+ $reviews = Review::with(['user', 'room'])->get();
+    return ReviewResource::collection($reviews);
+    // return ReviewResource::collection($query->with('user')->get());
     }
 
     #[OAT\Get(
-        path: '/api/reviews/{id}',
-        summary: 'Get a specific review',
-        tags: ['reviews'],
-        operationId: 'ReviewController.show',
-        parameters: [
-            new OAT\Parameter(name: 'id', in: 'path', required: true, schema: new OAT\Schema(type: 'integer'))
-        ],
-        responses: [
-            new OAT\Response(
-                response: HttpResponse::HTTP_OK,
-                description: 'Review details',
-                content: new OAT\JsonContent(ref: '#/components/schemas/Review')
-            )
-        ]
-    )]
-    public function show($id)
-    {
-        return new ReviewResource(Review::findOrFail($id));
+    path: '/api/reviews/{roomId}',
+    summary: 'Lấy danh sách đánh giá theo phòng',
+    tags: ['reviews'],
+    operationId: 'ReviewController.getByRoom',
+    parameters: [
+        new OAT\Parameter(
+            name: 'roomId',
+            in: 'path',
+            required: true,
+            description: 'ID của phòng',
+            schema: new OAT\Schema(type: 'integer')
+        )
+    ],
+    responses: [
+        new OAT\Response(
+            response: HttpResponse::HTTP_OK,
+            description: 'Danh sách đánh giá của phòng',
+            content: new OAT\JsonContent(type: 'array', items: new OAT\Items(ref: '#/components/schemas/Review'))
+        ),
+        new OAT\Response(response: HttpResponse::HTTP_NOT_FOUND, description: 'Không có đánh giá nào')
+    ]
+)]
+public function show($roomId)
+{
+    $reviews = \App\Models\Review::with('user', 'room')
+        ->where('roomId', $roomId)
+        ->orderByDesc('createdAt')
+        ->get();
+
+    if ($reviews->isEmpty()) {
+        return response()->json(['message' => 'Không có đánh giá nào cho phòng này.'], HttpResponse::HTTP_NOT_FOUND);
     }
+
+    return ReviewResource::collection($reviews);
+}
 
     #[OAT\Delete(
         path: '/api/reviews/{id}',

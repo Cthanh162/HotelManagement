@@ -23,6 +23,8 @@ class Room extends Model
         'floorId',
         'roomName',
         'status',
+        'adults',
+        'children',
         'roomType',
         'capacity',
         'price',
@@ -40,7 +42,15 @@ class Room extends Model
     {
         return $this->belongsTo(Hotel::class, 'hotelId');
     }
+public function bookings()
+{
+    return $this->hasMany(Booking::class, 'roomId', 'roomId');
+}
 
+public function reviews()
+{
+    return $this->hasMany(Review::class, 'roomId'); // Kiểm tra khóa ngoại đúng chưa
+}
     public function floor()
     {
         return $this->belongsTo(Floor::class, 'floorId');

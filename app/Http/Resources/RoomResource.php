@@ -32,13 +32,21 @@ class RoomResource extends JsonResource
             'status' => $this->status,
             'roomType' => $this->roomType,
             'capacity' => $this->capacity,
+            'children' => $this->children,
+            'adults' => $this->adults,
             'price' => $this->price,
             'description' => $this->description,
-            'roomImages' => $this->roomImages,
-            'roomVideo' => $this->roomVideo,
+            // 'roomImages' => $this->roomImages,
+            // 'roomVideo' => $this->roomVideo,
             'hotelId' => $this->hotelId,
             'floorId' => $this->floorId,
             'userId' => $this->userId,
+            // 'roomImages' => collect($this->roomImages)->map(fn($img) => asset('storage/' . $img)),
+            // 'roomVideo' => $this->roomVideo ? asset('storage/' . $this->roomVideo) : null,
+            'roomImages' => $this->roomImages, // Trả về URL trực tiếp từ Cloudinary
+            'roomVideo' => $this->roomVideo,
+            'bookings_count' => $this->bookings_count ?? 0,
+        'reviews_avg_rating' => round($this->reviews_avg_rating, 1) ?? null,
         ];
     }
 }

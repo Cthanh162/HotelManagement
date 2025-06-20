@@ -22,8 +22,8 @@ class ReviewResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'roomId' => $this->roomId,
-            'userId' => $this->userId,
+            'room' => new RoomResource($this->whenLoaded('room')),
+            'user' => new UserResource($this->whenLoaded('user')),
             'rating' => $this->rating,
             'des' => $this->des,
             'createdAt' => $this->createdAt,

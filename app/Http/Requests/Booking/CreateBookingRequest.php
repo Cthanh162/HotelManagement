@@ -14,6 +14,10 @@ use OpenApi\Attributes as OAT;
         new OAT\Property(property: 'checkinTime', type: 'string', format: 'date-time', example: '2025-05-01T14:00:00'),
         new OAT\Property(property: 'checkoutTime', type: 'string', format: 'date-time', example: '2025-05-03T12:00:00'),
         new OAT\Property(property: 'totalPrice', type: 'number', format: 'float', example: 250.50),
+        new OAT\Property(property: 'phone', type: 'string', example: '0966222776'),
+        new OAT\Property(property: 'cccd', type: 'string', example: '001202042004'),
+        new OAT\Property(property: 'Name', type: 'string', example: "CHi Thanh"),
+
     ]
 )]
 class CreateBookingRequest extends FormRequest
@@ -28,9 +32,12 @@ class CreateBookingRequest extends FormRequest
         return [
             'roomId' => 'required|integer|exists:rooms,roomId',
             'userId' => 'required|integer|exists:users,userId',
-            'checkinTime' => 'required|date|after:now',
-            'checkoutTime' => 'required|date|after:checkinTime',
-            'totalPrice' => 'required|numeric|min:0',
+            'checkinTime' => 'required|date_format:Y-m-d H:i:s',
+            'checkoutTime' => 'required|date_format:Y-m-d H:i:s|after:checkinTime',
+            'totalPrice' => 'nullable|numeric|min:0',
+            'Name' => 'required|string|max:255',
+            'phone' => 'required|string', // Ví dụ: Số điện thoại Việt Nam
+            'cccd' => 'required|string',
         ];
     }
 }

@@ -26,6 +26,10 @@ class Booking extends Model
         'create_at',
         'createdBy',
         'totalPrice',
+        'paymentProof',
+        'Name',
+        'phone',
+        'cccd',
     ];
     protected $casts = [
         'checkinTime' => 'datetime',

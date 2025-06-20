@@ -208,8 +208,10 @@ class RoomController extends Controller
             'roomImages' => $images,
             'roomVideo' => $videoPath,
         ]));
-
-        return response()->json(new RoomResource($room), 201);
+        if (!empty($data['services'])) {
+            $room->services()->sync($data['services']);
+        }
+        return response()->json(new RoomResource($room->load('services')), 201);
     }
     #[OAT\Get(
         path: '/api/rooms/{roomId}',
@@ -649,7 +651,7 @@ class RoomController extends Controller
     )]
     public function index()
     {
-        $rooms = Room::where('status', 'available')->get();
+        $rooms = Room::with('services')->where('status', 'available')->get();
         return RoomResource::collection($rooms);
     }
 
@@ -665,7 +667,7 @@ class RoomController extends Controller
 )]
 public function getMostBookedRooms()
 {
-    $rooms = Room::withCount('Booking')
+    $rooms = Room::withCount('Bookings')
         ->orderByDesc('bookings_count')
         ->take(6)
         ->get();
@@ -705,35 +707,44 @@ public function getTopRatedRooms()
         ]
     )]
     public function search(Request $request)
-    {
-        $query = Room::query()
-            ->where('hotelId', 1) // Mặc định hotelId = 1
-            ->where('status', 'available');
+{
+    $query = Room::query();
 
-        if ($request->filled('roomType')) {
-            $query->where('roomType', $request->input('roomType'));
-        }
+    // Chỉ lấy phòng có hotelId = 1 và status = AVAILABLE
+    $query->where('hotelId', 1)
+          ->where('status', 'available');
 
-        if ($request->filled('capacity')) {
-            $query->where('capacity', '>=', $request->input('capacity'));
-        }
-
-        if ($request->filled('adults')) {
-            $query->where('capacity', '>=', $request->input('adults'));
-        }
-
-        if ($request->filled('children')) {
-            $query->where('capacity', '>=', $query->getModel()->getAttribute('capacity') + $request->input('children'));
-        }
-
-        if ($request->filled('minPrice') || $request->filled('maxPrice')) {
-            $minPrice = $request->filled('minPrice') ? $request->input('minPrice') * 1000000 : 0; // Chuyển thành đơn vị VND
-            $maxPrice = $request->filled('maxPrice') ? $request->input('maxPrice') * 1000000 : PHP_INT_MAX; // Giá tối đa
-            $query->whereBetween('price', [$minPrice, $maxPrice]);
-        }
-
-        return RoomResource::collection($query->get());
+    // Tìm kiếm theo từ khoá trong tên phòng hoặc mô tả (case-insensitive)
+    if ($request->has('q') && $keyword = $request->input('q')) {
+        $query->where(function ($q) use ($keyword) {
+            $q->whereRaw('LOWER(roomName) LIKE ?', ['%' . strtolower($keyword) . '%'])
+              ->orWhereRaw('LOWER(description) LIKE ?', ['%' . strtolower($keyword) . '%']);
+        });
     }
+
+    // Tìm theo loại phòng
+    if ($request->filled('roomType')) {
+        $query->whereRaw('LOWER(roomType) LIKE ?', ['%' . strtolower($request->input('roomType')) . '%']);
+    }
+
+    // Sức chứa
+    if ($request->filled('capacity')) {
+        $query->where('capacity', $request->input('capacity'));
+    }
+
+    // Khoảng giá
+    if ($request->filled('minPrice')) {
+        $query->where('price', '>=', $request->input('minPrice'));
+    }
+    if ($request->filled('maxPrice')) {
+        $query->where('price', '<=', $request->input('maxPrice'));
+    }
+
+    // Eager load hình ảnh
+      $rooms = $query->get();
+
+    return RoomResource::collection($rooms);
+}
 #[OAT\Get(
     path: '/api/rooms/suggestions',
     tags: ['rooms'],

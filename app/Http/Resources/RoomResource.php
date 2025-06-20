@@ -45,8 +45,9 @@ class RoomResource extends JsonResource
             // 'roomVideo' => $this->roomVideo ? asset('storage/' . $this->roomVideo) : null,
             'roomImages' => $this->roomImages, // Trả về URL trực tiếp từ Cloudinary
             'roomVideo' => $this->roomVideo,
-            'bookings_count' => $this->bookings_count ?? 0,
-        'reviews_avg_rating' => round($this->reviews_avg_rating, 1) ?? null,
+            'bookings_count' => $this->when(isset($this->bookings_count), $this->bookings_count),
+            'reviews_avg_rating' => $this->when(isset($this->reviews_avg_rating), round($this->reviews_avg_rating, 1)),
+            'services' => ServiceResource::collection($this->whenLoaded('services')),
         ];
     }
 }

@@ -468,7 +468,7 @@ public function getByUser($userId)
     )]
     public function getAll()
     {
-        $bookings = Booking::all();
+        $bookings = Booking::with('room')->get();
         return BookingResource::collection($bookings);
     }
     #[OAT\Get(

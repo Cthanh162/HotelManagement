@@ -78,16 +78,47 @@ class HotelFloorController extends Controller
         return new FloorResource($floor);
     }
 
-    #[OAT\Put(path: '/api/floors/{id}', tags: ['floors'], summary: 'Update floor',
-        requestBody: new OAT\RequestBody(required: true, content: new OAT\JsonContent(ref: '#/components/schemas/UpdateFloorRequest')),
-        parameters: [new OAT\Parameter(name: 'id', in: 'path', required: true, schema: new OAT\Schema(type: 'integer'))],
-        responses: [new OAT\Response(response: 200, description: 'Floor updated', content: new OAT\JsonContent(ref: '#/components/schemas/Floor'))]
-    )]
-    public function update(UpdateFloorRequest $request, Floor $floor)
-    {
-        $floor->update($request->validated());
-        return new FloorResource($floor);
+    #[OAT\Put(
+    path: '/api/floors/{id}',
+    tags: ['floors'],
+    summary: 'Update floor',
+    requestBody: new OAT\RequestBody(
+        required: true,
+        content: new OAT\JsonContent(ref: '#/components/schemas/UpdateFloorRequest')
+    ),
+    parameters: [
+        new OAT\Parameter(
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: new OAT\Schema(type: 'integer')
+        )
+    ],
+    responses: [
+        new OAT\Response(
+            response: 200,
+            description: 'Floor updated',
+            content: new OAT\JsonContent(ref: '#/components/schemas/Floor')
+        ),
+        new OAT\Response(
+            response: 404,
+            description: 'Floor not found'
+        )
+    ]
+)]
+public function update(UpdateFloorRequest $request, $id)
+{
+    $floor = Floor::find($id);
+
+    if (!$floor) {
+        return response()->json(['message' => 'Floor not found.'], 404);
     }
+
+    $floor->update($request->validated());
+
+    // Load lại nếu cần lazy relationships
+    return response()->json(new FloorResource($floor), 200);
+}
 
     #[OAT\Delete(path: '/api/floors/{id}', tags: ['floors'], summary: 'Delete floor',
         parameters: [new OAT\Parameter(name: 'id', in: 'path', required: true, schema: new OAT\Schema(type: 'integer'))],

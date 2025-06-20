@@ -34,8 +34,9 @@ class UpdateRoomRequest extends FormRequest
             'capacity' => 'nullable|integer',
             'price' => 'nullable|numeric',
             'description' => 'nullable|string',
-            'roomImages.*' => 'image|mimes:jpeg,png,jpg,gif,webp',
-            'roomVideo' => 'nullable|mimes:mp4,mov,avi|max:50000',
+            'roomImages' => 'nullable|array',
+            'roomImages.*' => 'file|mimes:jpeg,png,jpg|max:10240',
+            'roomVideo' => 'nullable|file|mimes:mp4,avi,mov|max:204800',
         ];
     }
 }

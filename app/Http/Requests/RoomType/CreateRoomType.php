@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Http\Requests\RoomType;
+
+use Illuminate\Foundation\Http\FormRequest;
+use OpenApi\Attributes as OAT;
+
+#[OAT\Schema(
+    schema: 'CreateRoomRequest',
+    mediaType: 'multipart/form-data',
+    required: ['hotelId', 'floorId', 'roomName'],
+    properties: [
+        new OAT\Property(property: 'hotelId', type: 'integer'),
+        new OAT\Property(property: 'floorId', type: 'integer'),
+        new OAT\Property(property: 'roomName', type: 'string'),
+        new OAT\Property(property: 'status', type: 'string'),
+        new OAT\Property(property: 'roomType', type: 'string'),
+        new OAT\Property(property: 'capacity', type: 'integer'),
+        new OAT\Property(property: 'adults', type: 'integer'),
+        new OAT\Property(property: 'children', type: 'integer'),
+        new OAT\Property(property: 'price', type: 'number'),
+        new OAT\Property(property: 'description', type: 'string'),
+        new OAT\Property(property: 'roomImages', type: 'array', items: new OAT\Items(type: 'string', format: 'binary')),
+        new OAT\Property(property: 'roomVideo', type: 'string', format: 'binary'),
+    ]
+)]
+class CreateRoomRequest extends FormRequest
+{
+    public function rules(): array
+    {
+        return [
+            'hotelId' => 'required|exists:hotels,hotelId',
+            'floorId' => 'required|exists:floors,id',
+            'roomName' => 'required|string|max:255',
+
+            'status' => 'nullable|string',
+            'roomType' => 'nullable|string',
+            'capacity' => 'nullable|integer',
+            'adults' => 'nullable|integer',
+            'children' => 'nullable|integer',
+            'price' => 'nullable|numeric',
+            'description' => 'nullable|string',
+
+           'roomImages.*' => 'file|mimes:jpeg,png,jpg|max:10240',
+            'roomVideo' => 'nullable|file|mimes:mp4,avi,mov|max:204800', // 50MB
+        ];  
+    }
+}

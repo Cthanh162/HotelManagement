@@ -43,6 +43,8 @@ class CreateRoomRequest extends FormRequest
 
            'roomImages.*' => 'file|mimes:jpeg,png,jpg|max:10240',
             'roomVideo' => 'nullable|file|mimes:mp4,avi,mov|max:204800', // 50MB
+            'services' => 'nullable|array',
+        'services.*' => 'integer|exists:service,id',
         ];
     }
 }

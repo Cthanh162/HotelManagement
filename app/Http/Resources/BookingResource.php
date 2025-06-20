@@ -29,7 +29,7 @@ class BookingResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'roomId' => $this->roomId,
+            'room' => new RoomResource($this->whenLoaded('room')),
             'userId' => $this->userId,
             'checkinTime' => $this->checkinTime ? $this->checkinTime->format('Y-m-d H:i:s') : null,
             'checkoutTime' => $this->checkoutTime ? $this->checkoutTime->format('Y-m-d H:i:s') : null,

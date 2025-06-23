@@ -36,7 +36,7 @@ public function build()
     public function envelope()
     {
         return new Envelope(
-            subject: 'Contact Message Received',
+            subject: 'Liên hệ / Góp ý',
         );
     }
 

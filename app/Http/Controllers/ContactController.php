@@ -19,7 +19,7 @@ class ContactController extends Controller
     $contact = Contact::create($validated);
 
     // Gửi email
-    Mail::to('vanmilk03@gmail.com')->send(new ContactMessageReceived($validated));
+    Mail::to('Chithanh1622003@gmail.com')->send(new ContactMessageReceived($validated));
 
     return response()->json([
         'message' => 'Đã gửi liên hệ và email thành công',

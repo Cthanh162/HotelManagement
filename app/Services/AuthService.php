@@ -52,7 +52,7 @@ class AuthService
      */
     public function loginUser(LoginRequest $request): User
     {
-        $user = $this->userService->getByEmail($request->email);
+        $user = User::where('userName', $request->userName)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return abort(401, 'Invalid credentials.');

@@ -23,7 +23,7 @@ class Service extends Model
     ];
     public function rooms()
     {
-        return $this->belongsToMany(Room::class, 'RoomService', 'serviceId', 'roomId');
+        return $this->belongsToMany(Room::class, 'RoomService', 'serviceId', 'roomId')->withPivot('price');
     }
 
 }

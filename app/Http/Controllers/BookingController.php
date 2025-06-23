@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Http\JsonResponse;
 use App\Http\Requests\Booking\CreateBookingRequest;
 use App\Http\Requests\Booking\UploadPaymentRequest;
 use App\Http\Resources\BookingResource;
@@ -134,47 +134,65 @@ class BookingController extends Controller
 
         // Tính tổng giá (giữ nguyên logic từ trước)
         $basePrice = $room->price;
-        $totalPrice = 0;
+$totalPrice = 0;
 
-        $standardCheckin = Carbon::parse($checkinTime->format('Y-m-d') . ' 14:00:00');
-        $standardCheckout = Carbon::parse($checkoutTime->format('Y-m-d') . ' 12:00:00')->addDay();
-        if ($checkinTime->greaterThan($standardCheckin)) {
-            $standardCheckin = $standardCheckin->addDay();
-        }
-        if ($checkoutTime->lessThan($standardCheckout)) {
-            $standardCheckout = $standardCheckout->subDay();
-        }
-        $days = max(0, $standardCheckout->diffInDays($standardCheckin));
-        $totalPrice += $days * $basePrice;
+// Parse input thời gian từ request
+$checkinTime = Carbon::parse($request->checkinTime);
+$checkoutTime = Carbon::parse($request->checkoutTime);
 
-        $earlyCheckinFee = 0;
-        if ($checkinTime->lessThan($standardCheckin)) {
-            $earlyHour = $standardCheckin->diffInHours($checkinTime);
-            if ($earlyHour >= 5 && $earlyHour < 9) {
-                $earlyCheckinFee = $basePrice * 0.5;
-                Log::info("Phí check-in sớm 50%: {$earlyCheckinFee}");
-            } elseif ($earlyHour >= 0 && $earlyHour < 5) {
-                $earlyCheckinFee = $basePrice * 0.3;
-                Log::info("Phí check-in sớm 30%: {$earlyCheckinFee}");
-            }
-        }
-        $totalPrice += $earlyCheckinFee;
+// Chuẩn giờ checkin/checkout
+$standardCheckin = $checkinTime->copy()->startOfDay()->addHours(14); // 14h
+$standardCheckout = $checkoutTime->copy()->startOfDay()->addHours(12)->addDay(); // 12h hôm sau
 
-        $lateCheckoutFee = 0;
-        if ($checkoutTime->greaterThan($standardCheckout)) {
-            $lateHour = $checkoutTime->diffInHours($standardCheckout);
-            if ($lateHour > 0 && $lateHour <= 3) {
-                $lateCheckoutFee = $basePrice * 0.3;
-                Log::info("Phí check-out trễ 30%: {$lateCheckoutFee}");
-            } elseif ($lateHour > 3 && $lateHour <= 6) {
-                $lateCheckoutFee = $basePrice * 0.5;
-                Log::info("Phí check-out trễ 50%: {$lateCheckoutFee}");
-            } elseif ($lateHour > 6) {
-                $lateCheckoutFee = $basePrice;
-                Log::info("Phí check-out trễ 100%: {$lateCheckoutFee}");
-            }
-        }
-        $totalPrice += $lateCheckoutFee;
+// Nếu checkin sau 14h thì lùi standardCheckin
+if ($checkinTime->greaterThan($standardCheckin)) {
+    $standardCheckin = $standardCheckin->addDay();
+}
+
+// Nếu checkout trước 12h thì chuẩn lại thời gian
+if ($checkoutTime->lessThan($standardCheckout)) {
+    $standardCheckout = $standardCheckout->subDay();
+}
+
+// Tính số đêm
+$days = max(0, $standardCheckout->diffInDays($standardCheckin));
+$totalPrice += $days * $basePrice;
+Log::info("Số đêm: {$days}, Thành tiền: " . ($days * $basePrice));
+
+// ==== Phụ thu checkin sớm ====
+$earlyCheckinFee = 0;
+if ($checkinTime->lessThan($standardCheckin)) {
+    $earlyHour = $standardCheckin->diffInHours($checkinTime);
+    if ($earlyHour >= 5 && $earlyHour < 9) {
+        $earlyCheckinFee = $basePrice * 0.5;
+        Log::info("Phụ thu check-in sớm 50%: {$earlyCheckinFee}");
+    } elseif ($earlyHour >= 0 && $earlyHour < 5) {
+        $earlyCheckinFee = $basePrice * 0.3;
+        Log::info("Phụ thu check-in sớm 30%: {$earlyCheckinFee}");
+    }
+}
+$totalPrice += $earlyCheckinFee;
+
+// ==== Phụ thu checkout muộn ====
+$lateCheckoutFee = 0;
+if ($checkoutTime->greaterThan($standardCheckout)) {
+    $lateHour = $checkoutTime->diffInHours($standardCheckout);
+    if ($lateHour > 0 && $lateHour <= 3) {
+        $lateCheckoutFee = $basePrice * 0.3;
+        Log::info("Phụ thu check-out trễ 30%: {$lateCheckoutFee}");
+    } elseif ($lateHour > 3 && $lateHour <= 6) {
+        $lateCheckoutFee = $basePrice * 0.5;
+        Log::info("Phụ thu check-out trễ 50%: {$lateCheckoutFee}");
+    } elseif ($lateHour > 6) {
+        $lateCheckoutFee = $basePrice;
+        Log::info("Phụ thu check-out trễ 100%: {$lateCheckoutFee}");
+    }
+}
+$totalPrice += $lateCheckoutFee;
+
+$totalPrice = round($totalPrice);
+
+Log::info("Tổng giá: {$totalPrice}");
 
         // Tạo booking với paymentProof null ban đầu
         $booking = Booking::create([
@@ -286,7 +304,32 @@ class BookingController extends Controller
             return response()->json(['message' => 'Lỗi khi upload bằng chứng thanh toán.'], 500);
         }
     }
+// cancel
+public function cancel($id)
+{
+    $booking = Booking::findOrFail($id);
 
+    if ($booking->status === 'cancelled') {
+        return response()->json(['message' => 'Đặt phòng đã bị huỷ trước đó.'], 400);
+    }
+
+    $checkin = \Carbon\Carbon::parse($booking->checkinTime);
+    $today = \Carbon\Carbon::now();
+
+    if ($checkin->diffInDays($today, false) < -3) {
+        $booking->status = 'cancelled';
+        $booking->save();
+        $room = Room::find($booking->roomId);
+        if ($room && $room->status !== 'available') {
+            $room->status = 'available';
+            $room->save();
+        }
+        return response()->json(['message' => 'Huỷ đặt phòng thành công.']);
+    }
+    
+
+    return response()->json(['message' => 'Không thể hủy đặt phòng. Chỉ được hủy trước ngày check-in ít nhất 3 ngày.'], 400);
+}
 
 
     #[OAT\Get(
@@ -425,38 +468,38 @@ public function getByUser($userId)
         return new BookingResource($booking);
     }
 
-    #[OAT\Patch(
-        path: '/api/bookings/{id}/cancel',
-        summary: 'Cancel a booking',
-        tags: ['Booking'],
-        parameters: [
-            new OAT\Parameter(name: 'id', in: 'path', required: true, schema: new OAT\Schema(type: 'integer'))
-        ],
-        responses: [
-            new OAT\Response(response: HttpResponse::HTTP_OK, description: 'Booking canceled', content: new OAT\JsonContent(ref: '#/components/schemas/Booking')),
-            new OAT\Response(response: HttpResponse::HTTP_NOT_FOUND, description: 'Booking not found'),
-        ]
-    )]
-    public function cancel($id)
-    {
-        $booking = Booking::find($id);
+    // #[OAT\Patch(
+    //     path: '/api/bookings/{id}/cancel',
+    //     summary: 'Cancel a booking',
+    //     tags: ['Booking'],
+    //     parameters: [
+    //         new OAT\Parameter(name: 'id', in: 'path', required: true, schema: new OAT\Schema(type: 'integer'))
+    //     ],
+    //     responses: [
+    //         new OAT\Response(response: HttpResponse::HTTP_OK, description: 'Booking canceled', content: new OAT\JsonContent(ref: '#/components/schemas/Booking')),
+    //         new OAT\Response(response: HttpResponse::HTTP_NOT_FOUND, description: 'Booking not found'),
+    //     ]
+    // )]
+    // public function cancel($id)
+    // {
+    //     $booking = Booking::find($id);
 
-        if (!$booking) {
-            return response()->json(['message' => 'Booking not found.'], 404);
-        }
+    //     if (!$booking) {
+    //         return response()->json(['message' => 'Booking not found.'], 404);
+    //     }
 
-        if (!in_array($booking->status, ['PENDING', 'CONFIRMED'])) {
-            return response()->json(['message' => 'Only pending or confirmed bookings can be canceled.'], 400);
-        }
+    //     if (!in_array($booking->status, ['PENDING', 'CONFIRMED'])) {
+    //         return response()->json(['message' => 'Only pending or confirmed bookings can be canceled.'], 400);
+    //     }
 
-        $booking->update(['status' => 'CANCELED']);
+    //     $booking->update(['status' => 'CANCELED']);
 
-        if ($booking->room->status === 'BOOKED') {
-            $booking->room->update(['status' => 'AVAILABLE']);
-        }
+    //     if ($booking->room->status === 'BOOKED') {
+    //         $booking->room->update(['status' => 'AVAILABLE']);
+    //     }
 
-        return new BookingResource($booking);
-    }
+    //     return new BookingResource($booking);
+    // }
 
     #[OAT\Get(
         path: '/api/bookings',
@@ -573,6 +616,38 @@ public function getByUser($userId)
 
         return new BookingResource($booking);
     }
+
+    // checkout ////////////////
+public function checkout($id): JsonResponse
+{
+    $booking = Booking::with('room')->findOrFail($id);
+
+    if (($booking->status !== 'confirmed') && ($booking->paymentStatus != 'paid') && ($booking->paymentProof != null)) {
+        return response()->json(['message' => 'Chỉ có thể checkout các đơn đã xác nhận.'], 400);
+    }
+
+    DB::beginTransaction();
+
+    try {
+        // Cập nhật trạng thái đặt phòng
+        $booking->status = 'completed';
+        $booking->save();
+
+        // Cập nhật trạng thái phòng
+        $room = $booking->room;
+        if ($room) {
+            $room->status = 'available';
+            $room->save();
+        }
+
+        DB::commit();
+        return response()->json(['message' => 'Checkout thành công. Phòng đã được mở lại.']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Đã xảy ra lỗi khi checkout.'], 500);
+    }
+}
+
     #[OAT\Get(
         path: '/api/bookings/search',
         summary: 'Search bookings by hotel or floor',
@@ -652,5 +727,55 @@ public function getByUser($userId)
 
         return response()->json(new BookingResource($booking), HttpResponse::HTTP_OK);
     }
+    public function calculateSurcharge(Request $request, $id)
+{
+    $booking = Booking::with('room')->findOrFail($id);
 
+    $checkin = Carbon::parse($booking->checkinTime);
+    $checkout = Carbon::parse($request->checkoutTime);
+
+    $standardCheckout = $checkin->copy()->startOfDay()->addDay()->setTime(12, 0);
+
+    $surcharge = 0;
+    $percent = 0;
+
+    if ($checkout->gt($standardCheckout)) {
+        $hoursLate = $checkout->diffInHours($standardCheckout);
+
+        if ($hoursLate <= 3) {
+            $percent = 30;
+        } elseif ($hoursLate <= 6) {
+            $percent = 50;
+        } else {
+            $percent = 100;
+        }
+
+        $surcharge = round($booking->room->price * ($percent / 100));
+    }
+
+    return response()->json([
+        'checkinTime' => $checkin,
+        'checkoutTime' => $checkout,
+        'surcharge' => $surcharge,
+        'percent' => $percent
+    ]);
+}
+public function confirmCheckout(Request $request, $id)
+{
+    $booking = Booking::findOrFail($id);
+
+    if ($booking->status !== 'confirmed' || $booking->paymentStatus !== 'paid') {
+        return response()->json(['message' => 'Chỉ được checkout khi đơn đã xác nhận và thanh toán.'], 400);
+    }
+
+    $checkoutTime = Carbon::parse($request->checkoutTime);
+    $booking->status = 'completed';
+    $booking->checkoutTime = $checkoutTime;
+    $booking->save();
+
+    // Cập nhật lại trạng thái phòng
+    Room::where('roomId', $booking->roomId)->update(['status' => 'available']);
+
+    return response()->json(['message' => 'Checkout thành công và phòng đã sẵn sàng.']);
+}
 }

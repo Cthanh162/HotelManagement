@@ -12,8 +12,10 @@ use App\Http\Resources\RoomResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OAT;
+
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Illuminate\Http\JsonResponse;
 
 class RoomController extends Controller
 {
@@ -211,7 +213,7 @@ class RoomController extends Controller
         if (!empty($data['services'])) {
             $room->services()->sync($data['services']);
         }
-        return response()->json(new RoomResource($room->load('services')), 201);
+        return response()->json(new RoomResource($room->load('services', 'roomType')), 201);
     }
     #[OAT\Get(
         path: '/api/rooms/{roomId}',
@@ -447,7 +449,13 @@ class RoomController extends Controller
                 ], 400);
             }
         }
-
+        // Kiểm tra dung lượng hợp lệ
+    $adults = $data['adults'] ?? $room->adults;
+    $children = $data['children'] ?? $room->children;
+    $capacity = $data['capacity'] ?? $room->capacity;
+    if (($adults + $children) > $capacity) {
+        return response()->json(['message' => 'Dung lượng không hợp lệ'], 400);
+    }
         // Xử lý ảnh
         $images = $room->roomImages ?? [];
         if ($request->hasFile('roomImages')) {
@@ -518,7 +526,9 @@ class RoomController extends Controller
             'roomImages' => $images,
             'roomVideo' => $videoPath,
         ]));
-
+        if ($request->has('services')) {
+        $room->services()->sync($request->input('services'));
+        }
         return new RoomResource($room);
     }
 
@@ -651,10 +661,14 @@ class RoomController extends Controller
     )]
     public function index()
     {
-        $rooms = Room::with('services')->where('status', 'available')->get();
+        $rooms = Room::with('services','roomType')->where('status', 'available')->get();
         return RoomResource::collection($rooms);
     }
-
+    public function getAll()
+    {
+        $rooms = Room::with('services','roomType')->get();
+        return RoomResource::collection($rooms);
+    }
 
 
     #[OAT\Get(
@@ -789,5 +803,18 @@ public function suggestions()
         ->values();
 
     return RoomResource::collection($suggestedRooms);
+}
+public function getServices($id): JsonResponse
+{
+   $room = Room::with('services')->findOrFail($id);
+
+    $services = $room->services->map(function ($service) {
+        return [
+            'id' => $service->id,
+            'name' => $service->name,
+            'price' => $service->price, // Lấy trực tiếp từ bảng services
+        ];
+    });
+    return response()->json(['data' => $services]);
 }
 }

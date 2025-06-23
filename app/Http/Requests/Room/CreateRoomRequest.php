@@ -34,7 +34,7 @@ class CreateRoomRequest extends FormRequest
             'roomName' => 'required|string|max:255',
 
             'status' => 'nullable|string',
-            'roomType' => 'nullable|string',
+            'roomTypeId' => 'nullable|string',
             'capacity' => 'nullable|integer',
             'adults' => 'nullable|integer',
             'children' => 'nullable|integer',

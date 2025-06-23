@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use OpenApi\Attributes as OAT;
+use Carbon\Carbon;
+use App\Models\Booking;
+
 
 class StatisticController extends Controller
 {
@@ -111,5 +114,51 @@ class StatisticController extends Controller
             });
 
         return RevenueStatResource::collection($data);
+    }
+    public function revenue(Request $request)
+    {
+        $from = Carbon::parse($request->input('from'))->startOfDay();
+        $to = Carbon::parse($request->input('to'))->endOfDay();
+        $type = $request->input('type', 'day');
+
+        // Mặc định
+        $status = $request->input('status', 'confirmed');
+        $paymentStatus = $request->input('paymentStatus', 'paid');
+        $hotelId = $request->input('hotelId', 1);
+        $roomId = $request->input('roomId');
+
+        $query = DB::table('Booking')
+            ->join('rooms', 'Booking.roomId', '=', 'rooms.roomId')
+            ->selectRaw('SUM(Booking.totalPrice) as revenue');
+
+        // Nhóm theo thời gian
+        switch ($type) {
+            case 'month':
+                $query->selectRaw("DATE_FORMAT(Booking.checkoutTime, '%Y-%m') as label")
+                      ->groupBy(DB::raw("DATE_FORMAT(Booking.checkoutTime, '%Y-%m')"));
+                break;
+            case 'year':
+                $query->selectRaw("YEAR(Booking.checkoutTime) as label")
+                      ->groupBy(DB::raw("YEAR(Booking.checkoutTime)"));
+                break;
+            default:
+                $query->selectRaw("DATE(Booking.checkoutTime) as label")
+                      ->groupBy(DB::raw("DATE(Booking.checkoutTime)"));
+                break;
+        }
+
+        // Điều kiện lọc
+        $query->whereBetween('Booking.checkoutTime', [$from, $to])
+              ->where('Booking.status', $status)
+              ->where('Booking.paymentStatus', $paymentStatus)
+              ->where('rooms.hotelId', $hotelId);
+
+        if ($roomId) {
+            $query->where('Booking.roomId', $roomId);
+        }
+
+        $results = $query->orderBy('label')->get();
+
+        return response()->json($results);
     }
 }

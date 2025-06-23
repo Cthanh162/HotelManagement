@@ -25,7 +25,7 @@ class Room extends Model
         'status',
         'adults',
         'children',
-        'roomType',
+        'roomTypeId',
         'capacity',
         'price',
         'description',
@@ -59,5 +59,8 @@ public function reviews()
     {
         return $this->belongsToMany(Service::class, 'RoomService', 'roomId', 'serviceId');
     }
-
+    public function roomType()
+{
+    return $this->belongsTo(RoomType::class, 'roomTypeId', 'id'); // hoặc 'roomType_id' tùy DB bạn
+}
 }

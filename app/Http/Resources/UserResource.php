@@ -34,6 +34,7 @@ class UserResource extends JsonResource
             'userName' => $this->userName,
             'email' => $this->email,
             'created_at' => $this->created_at,
+            'roles' => $this->roles->pluck('roleName'),
         ];
     }
 }

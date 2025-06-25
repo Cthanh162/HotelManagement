@@ -57,7 +57,7 @@ class AuthService
         if (!$user || !Hash::check($request->password, $user->password)) {
             return abort(401, 'Invalid credentials.');
         }
-
+         $user->load('roles');
         return $user;
     }
 

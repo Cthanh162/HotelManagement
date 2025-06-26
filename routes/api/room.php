@@ -11,6 +11,8 @@ Route::put('/rooms/{id}', [RoomController::class, 'update'])->where('id', '[0-9]
 Route::delete('/rooms/{id}', [RoomController::class, 'destroy'])->where('id', '[0-9]+');; // Xóa phòng
 Route::get('/rooms/search', [RoomController::class, 'search']);
 Route::get('/rooms/suggestions', [RoomController::class, 'suggestions']);
+// Route::get('/rooms/available', [RoomController::class, 'getAvailableRooms']);
+Route::get('/rooms/available', [RoomController::class, 'searchAvailable']);
 Route::get('/rooms/top-rated', [RoomController::class, 'getTopRatedRooms']);
-Route::get('/rooms/most-booked', [RoomController::class, 'getMostBookedRooms']);
+Route::get('/rooms/most-booked', [RoomController::class, 'getMostBookedRooms']); 
 Route::get('/rooms/{id}/services', [RoomController::class, 'getServices']);

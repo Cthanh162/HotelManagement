@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 use App\Models\Room;
+use Carbon\Carbon;
 use App\Models\Hotel;
 use Cloudinary\Cloudinary;
 use App\Models\Floor;
@@ -215,6 +216,9 @@ class RoomController extends Controller
         }
         return response()->json(new RoomResource($room->load('services', 'roomType')), 201);
     }
+
+
+
     #[OAT\Get(
         path: '/api/rooms/{roomId}',
         tags: ['rooms'],
@@ -520,7 +524,7 @@ class RoomController extends Controller
                 Log::warning("Lỗi khi upload video lên Cloudinary: {$e->getMessage()}");
             }
         }
-
+Log::info('DATA UPDATE:', $data); 
         // Cập nhật phòng
         $room->update(array_merge($data, [
             'roomImages' => $images,
@@ -529,7 +533,8 @@ class RoomController extends Controller
         if ($request->has('services')) {
         $room->services()->sync($request->input('services'));
         }
-        return new RoomResource($room);
+        Log::info('ROOM SAU KHI UPDATE:', $room->toArray());
+        return new RoomResource($room->load('services', 'roomType'));
     }
 
     #[OAT\Delete(
@@ -682,6 +687,7 @@ class RoomController extends Controller
 public function getMostBookedRooms()
 {
     $rooms = Room::withCount('Bookings')
+        ->having('bookings_count', '>', 0)
         ->orderByDesc('bookings_count')
         ->take(6)
         ->get();
@@ -690,7 +696,8 @@ public function getMostBookedRooms()
 }
 public function getTopRatedRooms()
 {
-    $rooms = Room::withAvg('Reviews', 'rating') // giả sử cột rating trong bảng reviews
+    $rooms = Room::withAvg('Reviews', 'rating')
+        ->having('reviews_avg_rating', '>', 0)
         ->orderByDesc('reviews_avg_rating')
         ->take(6)
         ->get();
@@ -738,12 +745,14 @@ public function getTopRatedRooms()
 
     // Tìm theo loại phòng
     if ($request->filled('roomType')) {
-        $query->whereRaw('LOWER(roomType) LIKE ?', ['%' . strtolower($request->input('roomType')) . '%']);
+        $query->whereHas('roomType', function ($q) use ($request) {
+            $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($request->input('roomType')) . '%']);
+        });
     }
 
     // Sức chứa
     if ($request->filled('capacity')) {
-        $query->where('capacity', $request->input('capacity'));
+        $query->where('capacity', '<=', $request->input('capacity'));
     }
 
     // Khoảng giá
@@ -757,9 +766,9 @@ public function getTopRatedRooms()
     // Eager load hình ảnh
       $rooms = $query->get();
 
-    return RoomResource::collection($rooms);
+    return RoomResource::collection($rooms->load('services', 'roomType'));
 }
-#[OAT\Get(
+#[OAT\Get(  
     path: '/api/rooms/suggestions',
     tags: ['rooms'],
     summary: 'Get room suggestions by booking count and rating',
@@ -816,5 +825,69 @@ public function getServices($id): JsonResponse
         ];
     });
     return response()->json(['data' => $services]);
+}
+public function getAvailableRooms(Request $request)
+{
+    $checkin = $request->input('checkin'); // format: Y-m-d H:i
+    $checkout = $request->input('checkout');
+    if (!$checkin || !$checkout) {
+        return response()->json(['message' => 'Vui lòng nhập checkin và checkout'], 400);
+    }
+
+    $rooms = Room::whereDoesntHave('bookings', function ($q) use ($checkin, $checkout) {
+        $q->where('status', '!=', 'cancelled')
+          ->where(function ($q2) use ($checkin, $checkout) {
+              $q2->whereBetween('checkinTime', [$checkin, $checkout])
+                 ->orWhereBetween('checkoutTime', [$checkin, $checkout])
+                 ->orWhereRaw('? BETWEEN checkinTime AND checkoutTime', [$checkin])
+                 ->orWhereRaw('? BETWEEN checkinTime AND checkoutTime', [$checkout]);
+          });
+    })->get();
+
+    return RoomResource::collection($rooms);
+}
+public function searchAvailable(Request $request)
+{
+    $query = Room::with(['roomType', 'services']);
+
+    if ($request->q) {
+        $query->where('roomName', 'like', '%' . $request->q . '%');
+    }
+
+    if ($request->roomType) {
+        $query->whereHas('roomType', function ($q) use ($request) {
+            $q->where('name', $request->roomType);
+        });
+    }
+
+    if ($request->capacity) {
+        $query->where('capacity', '>=', $request->capacity);
+    }
+
+    if ($request->minPrice) {
+        $query->where('price', '>=', $request->minPrice);
+    }
+
+    if ($request->maxPrice) {
+        $query->where('price', '<=', $request->maxPrice);
+    }
+
+    $checkin = $request->checkin ? Carbon::parse($request->checkin) : null;
+    $checkout = $request->checkout ? Carbon::parse($request->checkout) : null;
+
+    if ($checkin && $checkout) {
+        $query->whereDoesntHave('Bookings', function ($q) use ($checkin, $checkout) {
+            $q->where(function ($q2) use ($checkin, $checkout) {
+                $q2->whereBetween('checkinTime', [$checkin, $checkout])
+                   ->orWhereBetween('checkoutTime', [$checkin, $checkout])
+                   ->orWhere(function ($q3) use ($checkin, $checkout) {
+                       $q3->where('checkinTime', '<=', $checkin)
+                          ->where('checkoutTime', '>=', $checkout);
+                   });
+            });
+        });
+    }
+
+    return RoomResource::collection($query->get());
 }
 }

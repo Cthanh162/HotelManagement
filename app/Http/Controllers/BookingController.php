@@ -95,46 +95,41 @@ class BookingController extends Controller
     {
         $data = $request->validated();
 
-        // Tìm phòng
-        $room = Room::find($data['roomId']);
-        if (!$room) {
-            return response()->json(['message' => 'Phòng không tồn tại.'], 404);
-        }
+    $room = Room::find($data['roomId']);
+    if (!$room) {
+        return response()->json(['message' => 'Phòng không tồn tại.'], 404);
+    }
 
-        // Kiểm tra trạng thái phòng
-        if ($room->status !== 'available') {
-            return response()->json(['message' => 'Phòng không khả dụng để đặt.'], 400);
-        }
+    $checkinTime = Carbon::parse($data['checkinTime']);
+    $checkoutTime = Carbon::parse($data['checkoutTime']);
 
-        // Chuyển đổi thời gian sang Carbon
-        $checkinTime = Carbon::parse($data['checkinTime']);
-        $checkoutTime = Carbon::parse($data['checkoutTime']);
+    if ($checkoutTime->lessThanOrEqualTo($checkinTime)) {
+        return response()->json(['message' => 'Thời gian check-out phải sau check-in.'], 400);
+    }
+    if ($checkinTime->lessThan(now())) {
+    return response()->json(['message' => 'Không thể đặt phòng trong quá khứ.'], 400);
+    }
 
-        // Kiểm tra thời gian hợp lệ
-        if ($checkoutTime->lessThanOrEqualTo($checkinTime)) {
-            return response()->json(['message' => 'Thời gian check-out phải sau thời gian check-in.'], 400);
-        }
+    // ❗ Bỏ kiểm tra status phòng, chỉ kiểm tra trùng thời gian booking
+    $overlap = Booking::where('roomId', $room->roomId)
+        ->whereIn('status', ['pending_payment', 'confirmed']) // chỉ quan tâm booking còn hiệu lực
+        ->where(function ($query) use ($checkinTime, $checkoutTime) {
+            $query->whereBetween('checkinTime', [$checkinTime, $checkoutTime])
+                ->orWhereBetween('checkoutTime', [$checkinTime, $checkoutTime])
+                ->orWhere(function ($q) use ($checkinTime, $checkoutTime) {
+                    $q->where('checkinTime', '<=', $checkinTime)
+                      ->where('checkoutTime', '>=', $checkoutTime);
+                });
+        })
+        ->exists();
 
-        // Kiểm tra trùng lịch đặt phòng
-        $overlap = Booking::where('roomId', $room->id)
-            ->where('status', 'CONFIRMED')
-            ->where(function ($query) use ($checkinTime, $checkoutTime) {
-                $query->whereBetween('checkinTime', [$checkinTime, $checkoutTime])
-                    ->orWhereBetween('checkoutTime', [$checkinTime, $checkoutTime])
-                    ->orWhere(function ($query2) use ($checkinTime, $checkoutTime) {
-                        $query2->where('checkinTime', '<', $checkinTime)
-                                ->where('checkoutTime', '>', $checkoutTime);
-                    });
-            })
-            ->exists();
-
-        if ($overlap) {
-            return response()->json(['message' => 'Phòng đã được đặt trong thời gian này.'], 409);
-        }
+    if ($overlap) {
+        return response()->json(['message' => 'Phòng đã có người đặt trong thời gian này.'], 409);
+    }
 
         // Tính tổng giá (giữ nguyên logic từ trước)
         $basePrice = $room->price;
-$totalPrice = 0;
+        $totalPrice = 0;
 
 // Parse input thời gian từ request
 $checkinTime = Carbon::parse($request->checkinTime);
@@ -212,7 +207,7 @@ Log::info("Tổng giá: {$totalPrice}");
         ]);
 
         // Cập nhật trạng thái phòng
-        $room->update(['status' => 'pending_payment']);
+        // $room->update(['status' => 'pending_payment']);
 
         Log::info("Đặt phòng thành công, Booking ID: {$booking->id}, Tổng giá: {$totalPrice}");
 
@@ -318,6 +313,7 @@ public function cancel($id)
 
     if ($checkin->diffInDays($today, false) < -3) {
         $booking->status = 'cancelled';
+        $booking->paymentStatus = 'cancelled';
         $booking->save();
         $room = Room::find($booking->roomId);
         if ($room && $room->status !== 'available') {
@@ -350,7 +346,7 @@ public function cancel($id)
             ->where('paymentStatus', 'pending_approval')
             ->get();
 
-        return BookingResource::collection($bookings);
+        return BookingResource::collection($bookings->load('room'));
     }
     #[OAT\Get(
     path: '/api/bookings/user/{userId}',
@@ -647,7 +643,31 @@ public function checkout($id): JsonResponse
         return response()->json(['message' => 'Đã xảy ra lỗi khi checkout.'], 500);
     }
 }
+public function outTime($id): JsonResponse
+{
+    $booking = Booking::with('room')->findOrFail($id);
 
+    DB::beginTransaction();
+
+    try {
+        // Cập nhật trạng thái đặt phòng
+        $booking->status = 'timeout';
+        $booking->save();
+
+        // Cập nhật trạng thái phòng
+        $room = $booking->room;
+        if ($room) {
+            $room->status = 'available';
+            $room->save();
+        }
+
+        DB::commit();
+        return response()->json(['message' => 'Hết thời gian thanh toán.']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Đã xảy ra lỗi.'], 500);
+    }
+}
     #[OAT\Get(
         path: '/api/bookings/search',
         summary: 'Search bookings by hotel or floor',

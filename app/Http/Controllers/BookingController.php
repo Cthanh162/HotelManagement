@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\Booking\CreateBookingRequest;
 use App\Http\Requests\Booking\UploadPaymentRequest;
-use App\Http\Resources\BookingResource;
+use App\Http\Requests\Booking\UpdateBookingRequest; 
+use App\Http\Resources\BookingResource; 
 use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Http\Request;
@@ -106,7 +107,7 @@ class BookingController extends Controller
     if ($checkoutTime->lessThanOrEqualTo($checkinTime)) {
         return response()->json(['message' => 'Thời gian check-out phải sau check-in.'], 400);
     }
-    if ($checkinTime->lessThan(now())) {
+    if ($checkinTime->lessThan(now()->startOfDay())) {
     return response()->json(['message' => 'Không thể đặt phòng trong quá khứ.'], 400);
     }
 
@@ -136,56 +137,9 @@ $checkinTime = Carbon::parse($request->checkinTime);
 $checkoutTime = Carbon::parse($request->checkoutTime);
 
 // Chuẩn giờ checkin/checkout
-$standardCheckin = $checkinTime->copy()->startOfDay()->addHours(14); // 14h
-$standardCheckout = $checkoutTime->copy()->startOfDay()->addHours(12)->addDay(); // 12h hôm sau
+$days = $checkoutTime->startOfDay()->diffInDays($checkinTime->startOfDay());
+$totalPrice = max(1, $days) * $basePrice;
 
-// Nếu checkin sau 14h thì lùi standardCheckin
-if ($checkinTime->greaterThan($standardCheckin)) {
-    $standardCheckin = $standardCheckin->addDay();
-}
-
-// Nếu checkout trước 12h thì chuẩn lại thời gian
-if ($checkoutTime->lessThan($standardCheckout)) {
-    $standardCheckout = $standardCheckout->subDay();
-}
-
-// Tính số đêm
-$days = max(0, $standardCheckout->diffInDays($standardCheckin));
-$totalPrice += $days * $basePrice;
-Log::info("Số đêm: {$days}, Thành tiền: " . ($days * $basePrice));
-
-// ==== Phụ thu checkin sớm ====
-$earlyCheckinFee = 0;
-if ($checkinTime->lessThan($standardCheckin)) {
-    $earlyHour = $standardCheckin->diffInHours($checkinTime);
-    if ($earlyHour >= 5 && $earlyHour < 9) {
-        $earlyCheckinFee = $basePrice * 0.5;
-        Log::info("Phụ thu check-in sớm 50%: {$earlyCheckinFee}");
-    } elseif ($earlyHour >= 0 && $earlyHour < 5) {
-        $earlyCheckinFee = $basePrice * 0.3;
-        Log::info("Phụ thu check-in sớm 30%: {$earlyCheckinFee}");
-    }
-}
-$totalPrice += $earlyCheckinFee;
-
-// ==== Phụ thu checkout muộn ====
-$lateCheckoutFee = 0;
-if ($checkoutTime->greaterThan($standardCheckout)) {
-    $lateHour = $checkoutTime->diffInHours($standardCheckout);
-    if ($lateHour > 0 && $lateHour <= 3) {
-        $lateCheckoutFee = $basePrice * 0.3;
-        Log::info("Phụ thu check-out trễ 30%: {$lateCheckoutFee}");
-    } elseif ($lateHour > 3 && $lateHour <= 6) {
-        $lateCheckoutFee = $basePrice * 0.5;
-        Log::info("Phụ thu check-out trễ 50%: {$lateCheckoutFee}");
-    } elseif ($lateHour > 6) {
-        $lateCheckoutFee = $basePrice;
-        Log::info("Phụ thu check-out trễ 100%: {$lateCheckoutFee}");
-    }
-}
-$totalPrice += $lateCheckoutFee;
-
-$totalPrice = round($totalPrice);
 
 Log::info("Tổng giá: {$totalPrice}");
 
@@ -365,7 +319,7 @@ public function cancel($id)
 )]
 public function getByUser($userId)
 {
-    $bookings = Booking::with('room')->where('userId', $userId)->orderBy('checkinTime', 'desc')->get();
+    $bookings = Booking::with('room.roomType')->where('userId', $userId)->orderBy('checkinTime', 'desc')->get();
     return BookingResource::collection($bookings);
 }
     #[OAT\Get(
@@ -565,7 +519,7 @@ public function getByUser($userId)
             )
         ]
     )]
-    public function update($id, CreateBookingRequest $request)
+    public function update($id, UpdateBookingRequest $request)
     {
         $booking = Booking::find($id);
 
@@ -607,7 +561,7 @@ public function getByUser($userId)
     if (isset($data['paymentStatus'])) {
         $booking->paymentStatus = $data['paymentStatus'];
     }
-    $booking->fill($data);
+    // $booking->fill($data);
         $booking->update($data);
 
         return new BookingResource($booking);

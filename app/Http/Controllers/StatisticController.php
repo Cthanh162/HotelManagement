@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use OpenApi\Attributes as OAT;
 use Carbon\Carbon;
 use App\Models\Booking;
+use Carbon\CarbonPeriod;
 
 
 class StatisticController extends Controller
@@ -115,50 +116,57 @@ class StatisticController extends Controller
 
         return RevenueStatResource::collection($data);
     }
+
     public function revenue(Request $request)
-    {
-        $from = Carbon::parse($request->input('from'))->startOfDay();
-        $to = Carbon::parse($request->input('to'))->endOfDay();
-        $type = $request->input('type', 'day');
+{
+    $from = $request->filled('from') ? Carbon::parse($request->input('from'))->startOfDay() : Carbon::now()->startOfWeek();
+    $to = $request->filled('to') ? Carbon::parse($request->input('to'))->endOfDay() : Carbon::now()->endOfWeek();
+    $type = $request->input('type', 'day');
 
-        // Mặc định
-        $status = $request->input('status', 'confirmed');
-        $paymentStatus = $request->input('paymentStatus', 'paid');
-        $hotelId = $request->input('hotelId', 1);
-        $roomId = $request->input('roomId');
+    $status = $request->input('status') ?? ['confirmed', 'completed'];
+    $paymentStatus = $request->input('paymentStatus') ?? ['paid'];
+    $hotelId = $request->input('hotelId', 1);
+    $roomId = $request->input('roomId');
 
-        $query = DB::table('Booking')
-            ->join('rooms', 'Booking.roomId', '=', 'rooms.roomId')
-            ->selectRaw('SUM(Booking.totalPrice) as revenue');
+    $query = DB::table('Booking')
+        ->join('rooms', 'Booking.roomId', '=', 'rooms.roomId')
+        ->whereBetween('Booking.checkoutTime', [$from, $to])
+        ->whereIn('Booking.status', is_array($status) ? $status : [$status])
+        ->whereIn('Booking.paymentStatus', is_array($paymentStatus) ? $paymentStatus : [$paymentStatus])
+        ->where('rooms.hotelId', $hotelId);
 
-        // Nhóm theo thời gian
-        switch ($type) {
-            case 'month':
-                $query->selectRaw("DATE_FORMAT(Booking.checkoutTime, '%Y-%m') as label")
-                      ->groupBy(DB::raw("DATE_FORMAT(Booking.checkoutTime, '%Y-%m')"));
-                break;
-            case 'year':
-                $query->selectRaw("YEAR(Booking.checkoutTime) as label")
-                      ->groupBy(DB::raw("YEAR(Booking.checkoutTime)"));
-                break;
-            default:
-                $query->selectRaw("DATE(Booking.checkoutTime) as label")
-                      ->groupBy(DB::raw("DATE(Booking.checkoutTime)"));
-                break;
-        }
-
-        // Điều kiện lọc
-        $query->whereBetween('Booking.checkoutTime', [$from, $to])
-              ->where('Booking.status', $status)
-              ->where('Booking.paymentStatus', $paymentStatus)
-              ->where('rooms.hotelId', $hotelId);
-
-        if ($roomId) {
-            $query->where('Booking.roomId', $roomId);
-        }
-
-        $results = $query->orderBy('label')->get();
-
-        return response()->json($results);
+    if ($roomId) {
+        $query->where('Booking.roomId', $roomId);
     }
+
+    switch ($type) {
+        case 'month':
+            $query->select(
+                DB::raw("DATE_FORMAT(Booking.checkoutTime, '%Y-%m') AS label"),
+                DB::raw("SUM(Booking.totalPrice) AS revenue")
+            )
+            ->groupBy(DB::raw("DATE_FORMAT(Booking.checkoutTime, '%Y-%m')"));
+            break;
+
+        case 'year':
+            $query->select(
+                DB::raw("YEAR(Booking.checkoutTime) AS label"),
+                DB::raw("SUM(Booking.totalPrice) AS revenue")
+            )
+            ->groupBy(DB::raw("YEAR(Booking.checkoutTime)"));
+            break;
+
+        default:
+            $query->select(
+                DB::raw("DATE(Booking.checkoutTime) AS label"),
+                DB::raw("SUM(Booking.totalPrice) AS revenue")
+            )
+            ->groupBy(DB::raw("DATE(Booking.checkoutTime)"));
+            break;
+    }
+
+    $results = $query->orderBy('label')->get();
+
+    return response()->json($results);
+}
 }

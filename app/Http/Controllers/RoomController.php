@@ -877,15 +877,16 @@ public function searchAvailable(Request $request)
 
     if ($checkin && $checkout) {
         $query->whereDoesntHave('Bookings', function ($q) use ($checkin, $checkout) {
-            $q->where(function ($q2) use ($checkin, $checkout) {
-                $q2->whereBetween('checkinTime', [$checkin, $checkout])
-                   ->orWhereBetween('checkoutTime', [$checkin, $checkout])
-                   ->orWhere(function ($q3) use ($checkin, $checkout) {
-                       $q3->where('checkinTime', '<=', $checkin)
-                          ->where('checkoutTime', '>=', $checkout);
-                   });
+        $q->where(function ($q2) use ($checkin, $checkout) {
+            $q2->whereBetween('checkinTime', [$checkin, $checkout])
+            ->orWhereBetween('checkoutTime', [$checkin, $checkout])
+            ->orWhere(function ($q3) use ($checkin, $checkout) {
+                $q3->where('checkinTime', '<=', $checkin)
+                    ->where('checkoutTime', '>=', $checkout);
             });
-        });
+        })
+        ->where('status', '!=', 'completed'); 
+    });
     }
 
     return RoomResource::collection($query->get());

@@ -32,8 +32,8 @@ class CreateBookingRequest extends FormRequest
         return [
             'roomId' => 'required|integer|exists:rooms,roomId',
             'userId' => 'required|integer|exists:users,userId',
-            'checkinTime' => 'required|date_format:Y-m-d H:i:s',
-            'checkoutTime' => 'required|date_format:Y-m-d H:i:s|after:checkinTime',
+            'checkinTime' => 'required|date_format:Y-m-d',
+            'checkoutTime' => 'required|date_format:Y-m-d|after:checkinTime',
             'totalPrice' => 'nullable|numeric|min:0',
             'Name' => 'required|string|max:255',
             'phone' => 'required|string', // Ví dụ: Số điện thoại Việt Nam

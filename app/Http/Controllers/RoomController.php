@@ -885,7 +885,7 @@ public function searchAvailable(Request $request)
                     ->where('checkoutTime', '>=', $checkout);
             });
         })
-        ->where('status', '!=', 'completed'); 
+       ->whereIn('status', ['pending_payment', 'confirmed']);
     });
     }
 

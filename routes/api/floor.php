@@ -7,4 +7,4 @@ Route::get('floors', [HotelFloorController::class, 'index']);
 Route::post('floors', [HotelFloorController::class, 'store']);
 Route::post('floors/{id}', [HotelFloorController::class, 'show']);
 Route::put('/floors/{id}', [HotelFloorController::class, 'update']);
-Route::post('/floors/{id}', [HotelFloorController::class, 'destroy']);
+Route::delete('/floors/{id}', [HotelFloorController::class, 'destroy']);

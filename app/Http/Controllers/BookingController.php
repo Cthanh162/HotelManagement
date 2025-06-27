@@ -6,6 +6,7 @@ use App\Http\Requests\Booking\CreateBookingRequest;
 use App\Http\Requests\Booking\UploadPaymentRequest;
 use App\Http\Requests\Booking\UpdateBookingRequest; 
 use App\Http\Resources\BookingResource; 
+use App\Jobs\AutoCancelBooking;
 use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Http\Request;
@@ -162,7 +163,7 @@ Log::info("Tổng giá: {$totalPrice}");
 
         // Cập nhật trạng thái phòng
         // $room->update(['status' => 'pending_payment']);
-
+        AutoCancelBooking::dispatch($booking->id)->delay(now()->addMinutes(5));
         Log::info("Đặt phòng thành công, Booking ID: {$booking->id}, Tổng giá: {$totalPrice}");
 
         return (new BookingResource($booking))->response()->setStatusCode(HttpResponse::HTTP_CREATED);
@@ -751,5 +752,31 @@ public function confirmCheckout(Request $request, $id)
     Room::where('roomId', $booking->roomId)->update(['status' => 'available']);
 
     return response()->json(['message' => 'Checkout thành công và phòng đã sẵn sàng.']);
+}
+public function cancelPayment($id)
+{
+    $booking = Booking::with('room')->findOrFail($id);
+
+    if ($booking->status !== 'pending_payment') {
+        return response()->json(['message' => 'Chỉ có thể huỷ đơn đang chờ thanh toán'], 400);
+    }
+
+    DB::beginTransaction();
+    try {
+        $booking->status = 'cancelled';
+        $booking->paymentStatus = 'cancelled';
+        $booking->save();
+
+        if ($booking->room) {
+            $booking->room->status = 'available';
+            $booking->room->save();
+        }
+
+        DB::commit();
+        return response()->json(['message' => 'Huỷ thanh toán thành công']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Đã xảy ra lỗi khi huỷ'], 500);
+    }
 }
 }

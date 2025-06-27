@@ -33,7 +33,7 @@ class UpdateBookingRequest extends FormRequest
             'checkinTime' => 'sometimes|date',
             'checkoutTime' => 'sometimes|date|after:checkinTime',
             'status' => 'nullable|string',
-            'paymentStatus' => 'nullable|string|in:paid,pending_payment,pending,pending_approval',
+            'paymentStatus' => 'nullable|string|in:paid,pending_payment,pending,pending_approval,cancelled',
             'createdBy' => 'sometimes|integer',
             'totalPrice' => 'sometimes|numeric',
         ];

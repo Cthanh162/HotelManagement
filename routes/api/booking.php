@@ -22,3 +22,4 @@ Route::post('/bookings/{id}/outTime', [BookingController::class, 'outTime'])->wh
 Route::get('/stats/revenue', [StatisticController::class, 'revenue']);
 Route::post('/bookings/{id}/calculate-surcharge', [BookingController::class, 'calculateSurcharge'])->where('id', '[0-9]+');
 Route::put('/bookings/{id}/confirm-checkout', [BookingController::class, 'confirmCheckout'])->where('id', '[0-9]+');
+Route::post('/bookings/{id}/cancel-payment', [BookingController::class, 'cancelPayment']);

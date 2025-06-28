@@ -156,7 +156,6 @@ Log::info("Tổng giá: {$totalPrice}");
             'paymentProof' => null,
             'Name' => $data['Name'],
             'phone' => $data['phone'],
-            'cccd' => $data['cccd'],
             'createdBy' => auth()->id(),
             'created_at' => now(),
         ]);
@@ -607,6 +606,32 @@ public function outTime($id): JsonResponse
     try {
         // Cập nhật trạng thái đặt phòng
         $booking->status = 'timeout';
+        $booking->save();
+
+        // Cập nhật trạng thái phòng
+        $room = $booking->room;
+        if ($room) {
+            $room->status = 'available';
+            $room->save();
+        }
+
+        DB::commit();
+        return response()->json(['message' => 'Hết thời gian thanh toán.']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Đã xảy ra lỗi.'], 500);
+    }
+}
+public function reject($id): JsonResponse
+{
+    $booking = Booking::with('room')->findOrFail($id);
+
+    DB::beginTransaction();
+
+    try {
+        // Cập nhật trạng thái đặt phòng
+        $booking->status = 'reject';
+        $booking->paymentStatus = 'reject';
         $booking->save();
 
         // Cập nhật trạng thái phòng

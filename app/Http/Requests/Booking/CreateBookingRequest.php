@@ -36,8 +36,7 @@ class CreateBookingRequest extends FormRequest
             'checkoutTime' => 'required|date_format:Y-m-d|after:checkinTime',
             'totalPrice' => 'nullable|numeric|min:0',
             'Name' => 'required|string|max:255',
-            'phone' => 'required|string', // Ví dụ: Số điện thoại Việt Nam
-            'cccd' => 'required|string',
+            'phone' => 'required|string'// Ví dụ: Số điện thoại Việt Nam
         ];
     }
 }

@@ -400,12 +400,9 @@ class RoomController extends Controller
     )]
     public function update(UpdateRoomRequest $request, $roomId)
     {
-        // Tìm phòng theo ID
         $room = Room::find($roomId);
         if (!$room) {
-            return response()->json([
-                'message' => 'Không tìm thấy phòng.'
-            ], 404);
+            return response()->json(['message' => 'Không tìm thấy phòng.'], 404);
         }
 
         $data = $request->validated();
@@ -421,60 +418,42 @@ class RoomController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error("Lỗi khởi tạo Cloudinary: {$e->getMessage()}");
-            // Tiếp tục xử lý nếu Cloudinary lỗi
+            return response()->json(['message' => 'Lỗi hệ thống'], 500);
         }
 
-        // Kiểm tra tính hợp lệ của hotelId và floorId
+        // Kiểm tra hotelId và floorId
         if (isset($data['hotelId']) || isset($data['floorId'])) {
             $hotel = Hotel::find($data['hotelId'] ?? $room->hotelId);
             $floors = DB::table('floors')->where('id', $data['floorId'] ?? $room->floorId)->first();
 
-            if (($data['children'] ?? $room->children + $data['adults'] ?? $room->adults) > ($data['capacity'] ?? $room->capacity)) {
-                return response()->json([
-                    'message' => 'Dung lượng không hợp lệ'
-                ], 400);
-            }
-
             if (!$hotel) {
-                return response()->json([
-                    'message' => 'hotelId hoặc floorId không hợp lệ.',
-                    'errors' => [
-                        'hotelId' => ['Khách sạn không tồn tại.']
-                    ]
-                ], 400);
+                return response()->json(['message' => 'Khách sạn không tồn tại.'], 400);
             }
-
             if (!$floors || $floors->hotelId !== $hotel->hotelId) {
-                return response()->json([
-                    'message' => 'hotelId hoặc floorId không hợp lệ.',
-                    'errors' => [
-                        'floorId' => ['Tầng không thuộc khách sạn đã chọn.']
-                    ]
-                ], 400);
+                return response()->json(['message' => 'Tầng không thuộc khách sạn.'], 400);
             }
         }
-        // Kiểm tra dung lượng hợp lệ
-    $adults = $data['adults'] ?? $room->adults;
-    $children = $data['children'] ?? $room->children;
-    $capacity = $data['capacity'] ?? $room->capacity;
-    if (($adults + $children) > $capacity) {
-        return response()->json(['message' => 'Dung lượng không hợp lệ'], 400);
-    }
+
+        // Kiểm tra dung lượng
+        $adults = $data['adults'] ?? $room->adults;
+        $children = $data['children'] ?? $room->children;
+        $capacity = $data['capacity'] ?? $room->capacity;
+        if (($adults + $children) > $capacity) {
+            return response()->json(['message' => 'Dung lượng không hợp lệ'], 400);
+        }
+
         // Xử lý ảnh
         $images = $room->roomImages ?? [];
         if ($request->hasFile('roomImages')) {
-            // Xóa ảnh cũ từ Cloudinary
-            if (isset($cloudinary)) {
-                foreach ($images as $imageUrl) {
-                    try {
-                        $publicId = $this->getCloudinaryPublicId($imageUrl, 'image');
-                        if ($publicId) {
-                            $cloudinary->uploadApi()->destroy($publicId);
-                            Log::info("Đã xóa ảnh cũ từ Cloudinary: {$publicId}");
-                        }
-                    } catch (\Exception $e) {
-                        Log::warning("Lỗi khi xóa ảnh cũ từ Cloudinary: {$imageUrl}, lỗi: {$e->getMessage()}");
+            // Xóa ảnh cũ
+            foreach ($images as $imageUrl) {
+                try {
+                    $publicId = $this->getCloudinaryPublicId($imageUrl, 'image');
+                    if ($publicId) {
+                        $cloudinary->uploadApi()->destroy($publicId);
                     }
+                } catch (\Exception $e) {
+                    Log::warning("Lỗi xóa ảnh cũ: {$e->getMessage()}");
                 }
             }
 
@@ -482,18 +461,14 @@ class RoomController extends Controller
             $newImages = [];
             $roomImages = $request->file('roomImages');
             $roomImages = is_array($roomImages) ? $roomImages : [$roomImages];
-            Log::info('Số lượng ảnh nhận được: ' . count($roomImages));
             foreach ($roomImages as $img) {
                 if ($img->isValid()) {
                     try {
                         $uploadResult = $cloudinary->uploadApi()->upload($img->getRealPath());
                         $newImages[] = $uploadResult['secure_url'];
-                        Log::info('Đường dẫn ảnh mới Cloudinary: ' . end($newImages));
                     } catch (\Exception $e) {
-                        Log::warning("Lỗi khi upload ảnh lên Cloudinary: {$img->getClientOriginalName()}, lỗi: {$e->getMessage()}");
+                        return response()->json(['message' => 'Lỗi upload ảnh: ' . $e->getMessage()], 500);
                     }
-                } else {
-                    Log::warning('File ảnh không hợp lệ: ' . $img->getClientOriginalName());
                 }
             }
             $images = $newImages;
@@ -502,39 +477,31 @@ class RoomController extends Controller
         // Xử lý video
         $videoPath = $room->roomVideo;
         if ($request->hasFile('roomVideo')) {
-            // Xóa video cũ từ Cloudinary
-            if ($videoPath && isset($cloudinary)) {
+            if ($videoPath) {
                 try {
                     $publicId = $this->getCloudinaryPublicId($videoPath, 'video');
                     if ($publicId) {
                         $cloudinary->uploadApi()->destroy($publicId, ['resource_type' => 'video']);
-                        Log::info("Đã xóa video cũ từ Cloudinary: {$publicId}");
                     }
                 } catch (\Exception $e) {
-                    Log::warning("Lỗi khi xóa video cũ từ Cloudinary: {$videoPath}, lỗi: {$e->getMessage()}");
+                    Log::warning("Lỗi xóa video cũ: {$e->getMessage()}");
                 }
             }
 
-            // Upload video mới
             try {
                 $uploadResult = $cloudinary->uploadApi()->upload($request->file('roomVideo')->getRealPath(), ['resource_type' => 'video']);
                 $videoPath = $uploadResult['secure_url'];
-                Log::info('Đường dẫn video mới Cloudinary: ' . $videoPath);
             } catch (\Exception $e) {
-                Log::warning("Lỗi khi upload video lên Cloudinary: {$e->getMessage()}");
+                return response()->json(['message' => 'Lỗi upload video: ' . $e->getMessage()], 500);
             }
         }
-Log::info('DATA UPDATE:', $data); 
-        // Cập nhật phòng
-        $room->update(array_merge($data, [
-            'roomImages' => $images,
-            'roomVideo' => $videoPath,
-        ]));
-        if ($request->has('services')) {
-        $room->services()->sync($request->input('services'));
-        }
-        Log::info('ROOM SAU KHI UPDATE:', $room->toArray());
-        return new RoomResource($room->load('services', 'roomType'));
+
+        // Cập nhật thông tin phòng
+        $data['roomImages'] = $images;
+        $data['roomVideo'] = $videoPath;
+        $room->update($data);
+
+        return response()->json(['message' => 'Cập nhật phòng thành công', 'data' => $room], 200);
     }
 
     #[OAT\Delete(

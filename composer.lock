@@ -132,16 +132,16 @@
         },
         {
             "name": "cloudinary/cloudinary_php",
-            "version": "3.1.0",
+            "version": "3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cloudinary/cloudinary_php.git",
-                "reference": "f87f0635aa6fc950b1cd99257ac04342914cec6c"
+                "reference": "5b7d5480ba91d1df19ebb0041b23d85a228845ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cloudinary/cloudinary_php/zipball/f87f0635aa6fc950b1cd99257ac04342914cec6c",
-                "reference": "f87f0635aa6fc950b1cd99257ac04342914cec6c",
+                "url": "https://api.github.com/repos/cloudinary/cloudinary_php/zipball/5b7d5480ba91d1df19ebb0041b23d85a228845ba",
+                "reference": "5b7d5480ba91d1df19ebb0041b23d85a228845ba",
                 "shasum": ""
             },
             "require": {
@@ -191,9 +191,9 @@
             "support": {
                 "email": "info@cloudinary.com",
                 "issues": "https://github.com/cloudinary/cloudinary_php/issues",
-                "source": "https://github.com/cloudinary/cloudinary_php/tree/3.1.0"
+                "source": "https://github.com/cloudinary/cloudinary_php/tree/3.1.1"
             },
-            "time": "2025-01-14T23:17:05+00:00"
+            "time": "2025-06-17T17:17:38+00:00"
         },
         {
             "name": "cloudinary/transformation-builder-sdk",
@@ -8800,12 +8800,12 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }

@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: hotelmanagement
+    env: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: hotelmysql
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        value: hotel_db
+      - key: DB_USERNAME
+        value: hotel_user
+      - key: DB_PASSWORD
+        value: your_mysql_password
+
+databases:
+  - name: hotelmysql
+    plan: free
+    databaseName: hotel_db
+    user: hotel_user
+    password: your_mysql_password

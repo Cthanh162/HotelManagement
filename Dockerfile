@@ -9,11 +9,13 @@ RUN apt-get update && apt-get install -y \
     zip \
     libonig-dev \
     libxml2-dev \
-    sqlite3 \
-    libsqlite3-dev
+    default-mysql-client \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev
 
-# Cài extension PHP
-RUN docker-php-ext-install pdo pdo_sqlite zip
+# Cài extension PHP cho MySQL
+RUN docker-php-ext-install pdo pdo_mysql zip
 
 # Cài composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -21,15 +23,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Thư mục làm việc
 WORKDIR /app
 
-# Copy source code vào container
+# Copy source code
 COPY . .
 
-# Cài package Laravel
+# Cài Laravel packages
 RUN composer install --no-dev --optimize-autoloader
 
-# Cache config (nếu .env sẵn sàng)
+# Cache config (nếu có .env)
 RUN php artisan config:cache || true
 
-# Expose port & chạy Laravel
+# Cổng Laravel
 EXPOSE 10000
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]

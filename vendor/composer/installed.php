@@ -3,7 +3,7 @@
         'name' => 'arifszn/pandora',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'af7b509be3a5847f02fbbe5709f6ff00c77a6358',
+        'reference' => '0c197c5745e147998ef365d268fc8301913bd856',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'arifszn/pandora' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'af7b509be3a5847f02fbbe5709f6ff00c77a6358',
+            'reference' => '0c197c5745e147998ef365d268fc8301913bd856',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

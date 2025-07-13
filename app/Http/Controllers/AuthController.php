@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Mail;
 use App\Events\UserSignedUp;
+use Illuminate\Support\Carbon;
+use App\Models\PendingUser;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\SignupRequest;
 use App\Http\Resources\LoggedInUserResource;
@@ -64,11 +66,60 @@ class AuthController extends Controller
     )]
     public function signup(SignupRequest $request): JsonResponse
     {
-        $user = $this->authService->signupUser($request);
+        $request->validate([
+            'userName' => 'required|string|unique:pending_users,userName|unique:users,userName',
+            'email' => 'required|email|unique:pending_users,email|unique:users,email',
+            'password' => 'required|min:6',
+        ]);
 
-        UserSignedUp::dispatch($user);
+        $email = $request->email; // 🟢 Gán giá trị
+        $verificationCode = rand(100000, 999999); // 🟢 Sinh mã xác minh
 
-        return Response::json(new LoggedInUserResource($user), HttpResponse::HTTP_CREATED);
+        PendingUser::create([
+            'userName' => $request->userName,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'verification_code' => $verificationCode,
+            'expires_at' => Carbon::now()->addMinutes(10),
+        ]);
+
+        // Gửi email xác nhận
+        Mail::send('emails.verify-code', ['code' => $verificationCode], function ($message) use ($email) {
+            $message->to($email)->subject('Mã xác minh đăng ký tài khoản');
+        });
+
+        return response()->json(['message' => 'Mã xác nhận đã được gửi tới email.']);
+    }
+    public function verifyCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required'
+        ]);
+
+        $pending = PendingUser::where('email', $request->email)
+                    ->where('verification_code', $request->code)
+                    ->where('expires_at', '>=', Carbon::now())
+                    ->first();
+
+        if (!$pending) {
+            return response()->json(['message' => 'Mã xác nhận không đúng hoặc đã hết hạn'], 422);
+        }
+
+        // Tạo tài khoản chính thức
+        $user = User::create([
+            'userName' => $pending->userName,
+            'email' => $pending->email,
+            'password' => $pending->password,
+        ]);
+
+        // Gán role mặc định
+        $user->roles()->attach(2); // 2 là id của role "user"
+
+        // Xoá pending user
+        $pending->delete();
+
+        return response()->json(['message' => 'Tài khoản đã được xác thực và tạo thành công.']);
     }
 
     /**

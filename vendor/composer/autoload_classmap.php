@@ -58,6 +58,7 @@ return array(
     'App\\Http\\Resources\\RoomTypeResource' => $baseDir . '/app/Http/Resources/RoomTypeResource.php',
     'App\\Http\\Resources\\ServiceResource' => $baseDir . '/app/Http/Resources/ServiceResource.php',
     'App\\Http\\Resources\\UserResource' => $baseDir . '/app/Http/Resources/UserResource.php',
+    'App\\Jobs\\AutoCancelBooking' => $baseDir . '/app/Jobs/AutoCancelBooking.php',
     'App\\Mail\\ContactMessageReceived' => $baseDir . '/app/Mail/ContactMessageReceived.php',
     'App\\Models\\Booking' => $baseDir . '/app/Models/Booking.php',
     'App\\Models\\Contact' => $baseDir . '/app/Models/Contact.php',

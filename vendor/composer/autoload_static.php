@@ -620,6 +620,7 @@ class ComposerStaticInit401bb32cf2522e20e196faebc99b8bcf
         'App\\Http\\Resources\\RoomTypeResource' => __DIR__ . '/../..' . '/app/Http/Resources/RoomTypeResource.php',
         'App\\Http\\Resources\\ServiceResource' => __DIR__ . '/../..' . '/app/Http/Resources/ServiceResource.php',
         'App\\Http\\Resources\\UserResource' => __DIR__ . '/../..' . '/app/Http/Resources/UserResource.php',
+        'App\\Jobs\\AutoCancelBooking' => __DIR__ . '/../..' . '/app/Jobs/AutoCancelBooking.php',
         'App\\Mail\\ContactMessageReceived' => __DIR__ . '/../..' . '/app/Mail/ContactMessageReceived.php',
         'App\\Models\\Booking' => __DIR__ . '/../..' . '/app/Models/Booking.php',
         'App\\Models\\Contact' => __DIR__ . '/../..' . '/app/Models/Contact.php',

@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) { // buidin của santcum
     return $request->user()->load('roles');
 });
-
+Route::post('/signup', [AuthController::class, 'signup']);
+Route::post('/verify-code', [AuthController::class, 'verifyCode']);
 
 

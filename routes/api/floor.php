@@ -3,8 +3,10 @@
 use App\Http\Controllers\HotelFloorController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('floors', [HotelFloorController::class, 'index']);
-Route::post('floors', [HotelFloorController::class, 'store']);
-Route::post('floors/{id}', [HotelFloorController::class, 'show']);
-Route::put('/floors/{id}', [HotelFloorController::class, 'update']);
-Route::delete('/floors/{id}', [HotelFloorController::class, 'destroy']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('floors', [HotelFloorController::class, 'index']);
+    Route::post('floors', [HotelFloorController::class, 'store']);
+    Route::post('floors/{id}', [HotelFloorController::class, 'show']);
+    Route::put('/floors/{id}', [HotelFloorController::class, 'update']);
+    Route::delete('/floors/{id}', [HotelFloorController::class, 'destroy']);
+});

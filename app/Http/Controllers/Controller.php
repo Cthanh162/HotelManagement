@@ -9,11 +9,7 @@ use Illuminate\Routing\Controller as BaseController;
 use OpenApi\Attributes as OAT;
 
 #[
-    OAT\Info(
-        version: '1.0.0',
-        title: 'VanBoDoi',
-        description: "Anh yeu co ay nhieu lam <3",
-    ),
+   
     OAT\Server(url: 'http://127.0.0.1:8000', description: 'Local API server'),
     OAT\SecurityScheme(
         securityScheme: 'BearerToken',

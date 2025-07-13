@@ -150,7 +150,7 @@ class RoomController extends Controller
         // Kiểm tra tính hợp lệ của hotelId và floorId
         $hotel = Hotel::find($data['hotelId']);
         $floors = DB::table('floors')->where('id', $data['floorId'])->first();
-
+       //kiểm tra số lượng người lớn và trẻ em 
         if (($request->children + $request->adults) > $request->capacity) {
             return response()->json([
                 'message' => 'Dung lượng không hợp lệ'
@@ -639,12 +639,12 @@ Log::debug('Request:', $data);
     )]
     public function index()
     {
-        $rooms = Room::with('services','roomType')->where('status', 'available')->get();
+        $rooms = Room::with('services','roomType')->where('status', '!=', 'locked')->get();
         return RoomResource::collection($rooms);
     }
     public function getAll()
     {
-        $rooms = Room::with('services','roomType')->get();
+        $rooms = Room::with('services','roomType')->where('status', '!=', 'locked')->get();
         return RoomResource::collection($rooms);
     }
 
@@ -659,14 +659,19 @@ Log::debug('Request:', $data);
 )]
 public function getMostBookedRooms()
 {
-    $rooms = Room::withCount('Bookings')
-        ->having('bookings_count', '>', 0)
-        ->orderByDesc('bookings_count')
-        ->take(6)
-        ->get();
+    $rooms = Room::withCount([
+        'Bookings as bookings_count' => function ($query) {
+            $query->where('status', 'completed');
+        }
+    ])
+    ->having('bookings_count', '>', 0)
+    ->orderByDesc('bookings_count')
+    ->take(6)
+    ->get();
 
     return RoomResource::collection($rooms);
 }
+
 public function getTopRatedRooms()
 {
     $rooms = Room::withAvg('Reviews', 'rating')
@@ -821,8 +826,8 @@ public function getAvailableRooms(Request $request)
 }
 public function searchAvailable(Request $request)
 {
-    $query = Room::with(['roomType', 'services']);
-
+    $query = Room::with(['roomType', 'services'])->where('status', '!=', 'locked');
+    
     if ($request->q) {
         $query->where('roomName', 'like', '%' . $request->q . '%');
     }

@@ -112,7 +112,7 @@ class BookingController extends Controller
     return response()->json(['message' => 'Không thể đặt phòng trong quá khứ.'], 400);
     }
 
-    // ❗ Bỏ kiểm tra status phòng, chỉ kiểm tra trùng thời gian booking
+    //  Bỏ kiểm tra status phòng, chỉ kiểm tra trùng thời gian booking
     $overlap = Booking::where('roomId', $room->roomId)
         ->whereIn('status', ['pending_payment', 'confirmed']) // chỉ quan tâm booking còn hiệu lực
         ->where(function ($query) use ($checkinTime, $checkoutTime) {
@@ -129,7 +129,7 @@ class BookingController extends Controller
         return response()->json(['message' => 'Phòng đã có người đặt trong thời gian này.'], 409);
     }
 
-        // Tính tổng giá (giữ nguyên logic từ trước)
+        // Tính tổng giá 
         $basePrice = $room->price;
         $totalPrice = 0;
 
@@ -629,7 +629,7 @@ public function reject($id): JsonResponse
     DB::beginTransaction();
 
     try {
-        // Cập nhật trạng thái đặt phòng
+        // Cập nhật trạng thái đơn hàng
         $booking->status = 'reject';
         $booking->paymentStatus = 'reject';
         $booking->save();

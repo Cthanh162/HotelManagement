@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Response;
 use OpenApi\Attributes as OAT;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-
+use App\Jobs\CleanupExpiredPendingUsers;
 class AuthController extends Controller
 {
     /**
@@ -87,7 +87,7 @@ class AuthController extends Controller
         Mail::send('emails.verify-code', ['code' => $verificationCode], function ($message) use ($email) {
             $message->to($email)->subject('Mã xác minh đăng ký tài khoản');
         });
-
+        CleanupExpiredPendingUsers::dispatch($request->email)->delay(now()->addMinutes(10));
         return response()->json(['message' => 'Mã xác nhận đã được gửi tới email.']);
     }
     public function verifyCode(Request $request)
@@ -103,7 +103,7 @@ class AuthController extends Controller
                     ->first();
 
         if (!$pending) {
-            return response()->json(['message' => 'Mã xác nhận không đúng hoặc đã hết hạn'], 422);
+            return response()->json(['message' => 'Mã xác nhận không đúng hoặc đã hết hạn'], 400);
         }
 
         // Tạo tài khoản chính thức
@@ -121,6 +121,50 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Tài khoản đã được xác thực và tạo thành công.']);
     }
+    public function resendCode(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email|exists:pending_users,email',
+    ]);
+
+    $pendingUser = PendingUser::where('email', $request->email)->first();
+
+    if (!$pendingUser) {
+        return response()->json(['message' => 'Email không tồn tại hoặc đã được xác minh.'], 404);
+    }
+
+    // Tạo mã mới
+    $verificationCode = rand(100000, 999999);
+
+    // Cập nhật mã và hạn
+    $pendingUser->update([
+        'verification_code' => $verificationCode,
+        'expires_at' => Carbon::now()->addMinutes(3),
+    ]);
+
+    // Gửi lại email
+    Mail::send('emails.verify-code', ['code' => $verificationCode], function ($message) use ($request) {
+        $message->to($request->email)->subject('Mã xác minh đăng ký tài khoản (Gửi lại)');
+    });
+
+    return response()->json(['message' => 'Mã xác nhận mới đã được gửi đến email.']);
+}
+public function cancelPendingRegistration(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $pendingUser = PendingUser::where('email', $request->email)->first();
+
+    if (!$pendingUser) {
+        return response()->json(['message' => 'Không tìm thấy yêu cầu đăng ký đang chờ.'], 404);
+    }
+
+    $pendingUser->delete();
+
+    return response()->json(['message' => 'Yêu cầu đăng ký đã được huỷ.']);
+}
 
     /**
      * Login a user.

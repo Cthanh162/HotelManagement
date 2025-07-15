@@ -20,5 +20,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) { //
 });
 Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/verify-code', [AuthController::class, 'verifyCode']);
-
-
+Route::post('/resend-code', [AuthController::class, 'resendCode']);
+Route::post('/cancel-verification', [AuthController::class, 'cancelPendingRegistration']);

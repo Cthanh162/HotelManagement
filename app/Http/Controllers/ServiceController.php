@@ -8,10 +8,18 @@ use App\Http\Resources\ServiceResource;
 
 class ServiceController extends Controller
 {
-    public function index()
-    {
-        return ServiceResource::collection(Service::all());
+    // Thêm điều kiện lọc theo status nếu có query
+public function index(Request $request) {
+    $query = Service::query();
+
+    if ($request->has('status') && $request->status === 'active') {
+        $query->where('status', 'active');
     }
+
+    return response()->json([
+        'data' => $query->get()
+    ]);
+}
 
     public function show($id)
     {

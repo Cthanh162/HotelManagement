@@ -72,10 +72,10 @@ class AuthController extends Controller
             'password' => 'required|min:6',
         ]);
 
-        $email = $request->email; // 🟢 Gán giá trị
-        $verificationCode = rand(100000, 999999); // 🟢 Sinh mã xác minh
+        $email = $request->email; 
+        $verificationCode = rand(100000, 999999); 
 
-        PendingUser::create([
+        PendingUser::create([ //lưu tt tạm vào bảng pending-user
             'userName' => $request->userName,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -96,7 +96,7 @@ class AuthController extends Controller
             'email' => 'required|email',
             'code' => 'required'
         ]);
-
+        // kiểm tra mã xác minh 
         $pending = PendingUser::where('email', $request->email)
                     ->where('verification_code', $request->code)
                     ->where('expires_at', '>=', Carbon::now())
@@ -112,11 +112,8 @@ class AuthController extends Controller
             'email' => $pending->email,
             'password' => $pending->password,
         ]);
-
-        // Gán role mặc định
-        $user->roles()->attach(2); // 2 là id của role "user"
-
-        // Xoá pending user
+        $user->roles()->attach(2); 
+        
         $pending->delete();
 
         return response()->json(['message' => 'Tài khoản đã được xác thực và tạo thành công.']);
@@ -139,7 +136,7 @@ class AuthController extends Controller
     // Cập nhật mã và hạn
     $pendingUser->update([
         'verification_code' => $verificationCode,
-        'expires_at' => Carbon::now()->addMinutes(3),
+        'expires_at' => Carbon::now()->addMinutes(1),
     ]);
 
     // Gửi lại email

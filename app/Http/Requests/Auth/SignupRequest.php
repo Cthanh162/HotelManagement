@@ -49,6 +49,7 @@ class SignupRequest extends FormRequest
         return [
             'userName' => [
                 'required',
+                'min:6',
                 'string',
             ],
             'email' => [

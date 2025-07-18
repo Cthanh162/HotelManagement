@@ -47,7 +47,7 @@
         <p>Để hoàn tất đăng ký, vui lòng nhập mã xác minh bên dưới:</p>
         
         <div class="code">{{ $code }}</div>
-        
+          <p>Mã xác minh có hiệu lực trong 10 phút kể từ thời gian nhận.</p>
         <p>Nếu bạn không yêu cầu đăng ký tài khoản, bạn có thể bỏ qua email này.</p>
 
         <div class="footer">

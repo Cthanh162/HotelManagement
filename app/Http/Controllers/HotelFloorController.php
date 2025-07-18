@@ -124,9 +124,21 @@ public function update(UpdateFloorRequest $request, $id)
         parameters: [new OAT\Parameter(name: 'id', in: 'path', required: true, schema: new OAT\Schema(type: 'integer'))],
         responses: [new OAT\Response(response: 204, description: 'Floor deleted')]
     )]
-    public function destroy(Floor $floor)
-    {
-        $floor->delete();
-        return response()->noContent();
+    public function destroy($id)
+{
+    $floor = Floor::with('rooms')->find($id);
+
+    if (!$floor) {
+        return response()->json(['message' => 'Không tìm thấy tầng'], 404);
     }
+
+    if ($floor->rooms()->exists()) {
+        return response()->json(['message' => 'Tầng đang chứa phòng, không thể xoá'], 400);
+    }
+
+    $floor->delete();
+
+    return response()->json(['message' => 'Đã xoá tầng']);
+}
+
 }

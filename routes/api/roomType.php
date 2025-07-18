@@ -12,3 +12,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [RoomTypeController::class, 'destroy']);
     });
 });
+Route::prefix('room-types')->group(function () {
+        Route::get('/', [RoomTypeController::class, 'index']);
+        Route::get('/{id}', [RoomTypeController::class, 'show']);
+       
+    });

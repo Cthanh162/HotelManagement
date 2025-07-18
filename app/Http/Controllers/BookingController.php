@@ -112,10 +112,10 @@ class BookingController extends Controller
     return response()->json(['message' => 'Không thể đặt phòng trong quá khứ.'], 400);
     }
 
-    //  Bỏ kiểm tra status phòng, chỉ kiểm tra trùng thời gian booking
+    //   kiểm tra trùng thời gian đặt phòng. tìm các đơn trong bảng booking mà có id phòng trùng vs phòng hiện tại 
     $overlap = Booking::where('roomId', $room->roomId)
         ->whereIn('status', ['pending_payment', 'confirmed']) // chỉ quan tâm booking còn hiệu lực
-        ->where(function ($query) use ($checkinTime, $checkoutTime) {
+        ->where(function ($query) use ($checkinTime, $checkoutTime) {// kiểm tra thời gian 
             $query->whereBetween('checkinTime', [$checkinTime, $checkoutTime])
                 ->orWhereBetween('checkoutTime', [$checkinTime, $checkoutTime])
                 ->orWhere(function ($q) use ($checkinTime, $checkoutTime) {

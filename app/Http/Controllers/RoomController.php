@@ -642,11 +642,11 @@ Log::debug('Request:', $data);
         $rooms = Room::with('services','roomType')->where('status', '!=', 'locked')->get();
         return RoomResource::collection($rooms);
     }
-    public function getAll()
-    {
-        $rooms = Room::with('services','roomType')->where('status', '!=', 'locked')->get();
-        return RoomResource::collection($rooms);
-    }
+public function getAll()
+{
+    $rooms = Room::with('services', 'roomType')->get(); 
+    return RoomResource::collection($rooms);
+}
 
 
     #[OAT\Get(
@@ -730,7 +730,7 @@ public function getTopRatedRooms()
 
     // Sức chứa
     if ($request->filled('capacity')) {
-        $query->where('capacity', '<=', $request->input('capacity'));
+        $query->where('capacity', '>=', $request->input('capacity'));
     }
 
     // Khoảng giá
@@ -799,7 +799,8 @@ public function getServices($id): JsonResponse
         return [
             'id' => $service->id,
             'name' => $service->name,
-            'price' => $service->price, // Lấy trực tiếp từ bảng services
+            'price' => $service->price, 
+            'status'=>$service->status, 
         ];
     });
     return response()->json(['data' => $services]);
